@@ -291,7 +291,7 @@ const AdminPanel: React.FC = () => {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  label="Раздвижка хром (₾)"
+                  label="Раздвижная система Хром (₾)"
                   value={prices.slidingChrome || ''}
                   onChange={(e) => handlePriceChange('slidingChrome', e.target.value)}
                   fullWidth
@@ -301,7 +301,7 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Раздвижка матовая (₾)"
+                  label="Раздвижная система Матовый (₾)"
                   value={prices.slidingMatte || ''}
                   onChange={(e) => handlePriceChange('slidingMatte', e.target.value)}
                   fullWidth
@@ -311,7 +311,7 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Раздвижка черная (₾)"
+                  label="Раздвижная система Черный (₾)"
                   value={prices.slidingBlack || ''}
                   onChange={(e) => handlePriceChange('slidingBlack', e.target.value)}
                   fullWidth
@@ -321,7 +321,7 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Раздвижка золото (₾)"
+                  label="Раздвижная система Золотой (₾)"
                   value={prices.slidingGold || ''}
                   onChange={(e) => handlePriceChange('slidingGold', e.target.value)}
                   fullWidth

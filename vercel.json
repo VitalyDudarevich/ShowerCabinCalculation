@@ -1,18 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
   "routes": [
-    {
-      "handle": "filesystem"
-    },
     {
       "src": "/static/(.*)",
       "dest": "/static/$1"
@@ -26,19 +16,15 @@
       "dest": "/manifest.json"
     },
     {
-      "src": "/logo192.png",
-      "dest": "/logo192.png"
+      "src": "/asset-manifest.json",
+      "dest": "/asset-manifest.json"
     },
     {
-      "src": "/logo512.png",
-      "dest": "/logo512.png"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "github": {
-    "silent": true
-  }
+  ]
 } 
