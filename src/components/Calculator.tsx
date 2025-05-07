@@ -96,6 +96,13 @@ interface SavedConfiguration {
   installation: boolean;
   createdAt: string;
   additionalHardware: AdditionalHardware;
+  isOpeningSize: boolean;
+  openingLength: string;
+  openingHeight: string;
+  additionalRail: boolean;
+  doorWidth: string;
+  glassType: 'stationary' | 'door';
+  profileType: string;
 }
 
 interface ShowerConfig {
@@ -831,6 +838,9 @@ const Calculator: React.FC = () => {
     if (value === '' || (/^\d{0,4}$/.test(value) && parseInt(value) <= 5000)) {
       updateGlass(id, 'height', value);
       setErrors(prev => ({ ...prev, glassHeight: '' }));
+      if (configuration === 'unique') {
+        setTimeout(() => calculatePrice(), 0);
+      }
     }
   };
 
@@ -839,11 +849,17 @@ const Calculator: React.FC = () => {
     if (value === '' || (/^\d{0,4}$/.test(value) && parseInt(value) <= 5000)) {
       updateGlass(id, 'width', value);
       setErrors(prev => ({ ...prev, glassWidth: '' }));
+      if (configuration === 'unique') {
+        setTimeout(() => calculatePrice(), 0);
+      }
     }
   };
 
   const handleGlassNameChange = (id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     updateGlass(id, 'name', event.target.value);
+    if (configuration === 'unique') {
+      setTimeout(() => calculatePrice(), 0);
+    }
   };
 
   const handleProfileCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -975,7 +991,14 @@ const Calculator: React.FC = () => {
       delivery,
       installation,
       createdAt: new Date().toISOString(),
-      additionalHardware
+      additionalHardware,
+      isOpeningSize,
+      openingLength,
+      openingHeight,
+      additionalRail,
+      doorWidth,
+      glassType,
+      profileType
     };
 
     const existingIndex = savedConfigs.findIndex((config: SavedConfiguration) => config.id === newConfig.id);
@@ -1017,11 +1040,13 @@ const Calculator: React.FC = () => {
     setChangedDetails({});
     setDelivery(config.delivery);
     setInstallation(config.installation);
-    setIsOpeningSize(false);
-    setOpeningLength('');
-    setOpeningHeight('');
-    setAdditionalRail(false);
-    setGlassType('stationary');
+    setIsOpeningSize(config.isOpeningSize ?? true);
+    setOpeningLength(config.openingLength || '');
+    setOpeningHeight(config.openingHeight || '');
+    setAdditionalRail(config.additionalRail || false);
+    setDoorWidth(config.doorWidth || '');
+    setGlassType(config.glassType || 'stationary');
+    setProfileType(config.profileType || '');
     setAdditionalHardware(config.additionalHardware || { customItems: [] });
   };
 
@@ -1236,6 +1261,12 @@ const Calculator: React.FC = () => {
 
   const addCustomHardware = () => {
     if (!newHardwareName.trim()) return;
+    
+    // Проверяем, есть ли элемент в списке доступных опций
+    const availableItems = getAvailableHardwareItems();
+    const isValidItem = availableItems.includes(newHardwareName.trim());
+    
+    if (!isValidItem) return;
     
     const newItem: CustomHardwareItem = {
       id: Date.now().toString(),
@@ -2157,6 +2188,40 @@ const Calculator: React.FC = () => {
                     sx={calculatorStyles.commentField}
                     helperText={`${comment.length}/2000`}
                   />
+
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 2, 
+                    mt: 3,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    pt: 2
+                  }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleNewProject}
+                      fullWidth
+                      size="large"
+                    >
+                      Новый проект
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        if (editingId && priceChanged) {
+                          setOpenSaveDialog(true);
+                        } else {
+                          handleSave();
+                        }
+                      }}
+                      fullWidth
+                      size="large"
+                    >
+                      Сохранить
+                    </Button>
+                  </Box>
                 </Box>
               )}
             </Box>
@@ -2189,6 +2254,14 @@ const Calculator: React.FC = () => {
                         <Tooltip title={config.customerName} placement="top">
                           <Typography sx={calculatorStyles.projectName}>
                             {config.customerName}
+                            {config.configuration && (
+                              <span style={{ fontWeight: 'normal', color: 'text.secondary' }}>
+                                {' '}({config.configuration === 'glass' ? 'Стекляшка' :
+                                  config.configuration === 'straight' ? 'Прямая раздвижная' :
+                                  config.configuration === 'corner' ? 'Угловая раздвижная' :
+                                  config.configuration === 'unique' ? 'Уникальная конфигурация' : config.configuration})
+                              </span>
+                            )}
                           </Typography>
                         </Tooltip>
                         <Chip 
@@ -2427,7 +2500,11 @@ const Calculator: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
               <Autocomplete
                 freeSolo
-                options={getAvailableHardwareItems()}
+                options={getAvailableHardwareItems().filter(item => 
+                  !additionalHardware.customItems.some(existingItem => 
+                    existingItem.name === item
+                  )
+                )}
                 value={newHardwareName}
                 onChange={(_, newValue) => {
                   if (newValue) {
@@ -2443,8 +2520,25 @@ const Calculator: React.FC = () => {
                     {...params}
                     label="Название фурнитуры"
                     fullWidth
+                    error={newHardwareName.trim() !== '' && !getAvailableHardwareItems().includes(newHardwareName.trim())}
+                    helperText={newHardwareName.trim() !== '' && !getAvailableHardwareItems().includes(newHardwareName.trim()) ? 
+                      'Выберите фурнитуру из списка' : ''}
                   />
                 )}
+                renderOption={(props, option) => {
+                  const isDisabled = additionalHardware.customItems.some(
+                    item => item.name === option
+                  );
+                  return (
+                    <li {...props} style={{ 
+                      ...props.style,
+                      opacity: isDisabled ? 0.5 : 1,
+                      pointerEvents: isDisabled ? 'none' : 'auto'
+                    }}>
+                      {option}
+                    </li>
+                  );
+                }}
                 sx={{ flex: 1 }}
               />
               <TextField
@@ -2463,7 +2557,7 @@ const Calculator: React.FC = () => {
               <Button
                 variant="outlined"
                 onClick={addCustomHardware}
-                disabled={!newHardwareName.trim()}
+                disabled={!newHardwareName.trim() || !getAvailableHardwareItems().includes(newHardwareName.trim())}
                 sx={{ 
                   minWidth: '120px',
                   textTransform: 'none'
@@ -2496,13 +2590,16 @@ const Calculator: React.FC = () => {
           <Button 
             onClick={() => {
               if (newHardwareName.trim()) {
-                addCustomHardware();
+                if (getAvailableHardwareItems().includes(newHardwareName.trim())) {
+                  addCustomHardware();
+                }
               }
               setOpenHardwareDialog(false);
               calculatePrice();
             }}
             variant="contained"
             color="primary"
+            disabled={newHardwareName.trim() !== '' && !getAvailableHardwareItems().includes(newHardwareName.trim())}
             sx={{ 
               minWidth: '120px',
               textTransform: 'none',
