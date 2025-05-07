@@ -189,12 +189,10 @@ const Calculator: React.FC = () => {
   const [priceChanged, setPriceChanged] = useState<boolean>(false);
   const [changedDetails, setChangedDetails] = useState<{ [key: string]: boolean }>({});
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
-  const [openNewProjectDialog, setOpenNewProjectDialog] = useState(false);
   const [delivery, setDelivery] = useState<boolean>(true);
   const [installation, setInstallation] = useState<boolean>(true);
   const [originalStatus, setOriginalStatus] = useState<ProjectStatus>('Рассчет');
   const [config, setConfig] = useState<ShowerConfig>(defaultConfig);
-  const [projectName, setProjectName] = useState('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [glassType, setGlassType] = useState<'stationary' | 'door'>('stationary');
@@ -727,38 +725,6 @@ const Calculator: React.FC = () => {
     localStorage.setItem('savedConfigurations', JSON.stringify(updatedConfigs));
   };
 
-  const handleNewProject = () => {
-    setCustomerName('');
-    setConfiguration('');
-    setGlassColor('clear');
-    setGlassThickness('8');
-    setHardwareColor('');
-    setGlassHeight('');
-    setGlassWidth('');
-    setDoorWidth('');
-    setProfileCount(1);
-    setDelivery(true);
-    setInstallation(true);
-    setAdditionalRail(false);
-    setComment('');
-    setErrors({});
-    setEditingId(null);
-    setPriceChanged(false);
-    setChangedDetails({});
-    setCalculationDetails([]);
-    setTotalPrice(0);
-    setOriginalPrice(0);
-    setStatus('Рассчет');
-    setOriginalStatus('Рассчет');
-    setGlassType('stationary');
-    setProfileType('');
-    setIsOpeningSize(true);
-    setOpeningLength('');
-    setOpeningHeight('');
-    setOpenNewProjectDialog(false);
-    localStorage.removeItem('calculatorState');
-  };
-
   const handleStatusChange = (event: SelectChangeEvent) => {
     const newStatus = event.target.value as ProjectStatus;
     setStatus(newStatus);
@@ -849,709 +815,721 @@ const Calculator: React.FC = () => {
     config.customerName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleNewProjectDialogClose = () => {
-    setOpenNewProjectDialog(false);
-  };
-
-  const handleNewProjectSave = () => {
-    handleSave();
-    handleNewProjectDialogClose();
-  };
-
   const handleCloseSuccessMessage = () => {
     setShowSuccessMessage(false);
   };
 
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={3} sx={{ pl: '50px' }}>
-        <Paper sx={{ p: 3, height: '100%' }}>
-          <Typography variant="h6" gutterBottom>
-            Детали расчета:
-          </Typography>
-          <List sx={{ pl: 0 }}>
-            {customerName && (
-              <ListItem sx={{ pl: 0, py: 0.5 }}>
-                <ListItemText 
-                  primary={`Заказ: ${customerName}`}
-                  sx={{ 
-                    '& .MuiListItemText-primary': { 
-                      fontSize: '0.9rem',
-                      lineHeight: 1.2,
-                      fontWeight: 'bold'
-                    } 
-                  }}
-                />
-              </ListItem>
-            )}
-            {comment && (
-              <ListItem sx={{ pl: 0, py: 0.5 }}>
-                <ListItemText 
-                  primary={`Комментарий: ${comment}`}
-                  sx={{ 
-                    '& .MuiListItemText-primary': { 
-                      fontSize: '0.9rem',
-                      lineHeight: 1.2,
-                      fontStyle: 'italic'
-                    } 
-                  }}
-                />
-              </ListItem>
-            )}
-            {calculationDetails.map((detail, index) => (
-              <ListItem key={index} sx={{ pl: 0, py: 0.5 }}>
-                <ListItemText 
-                  primary={detail} 
-                  sx={{ 
-                    '& .MuiListItemText-primary': { 
-                      fontSize: '0.9rem',
-                      lineHeight: 1.2,
-                      color: changedDetails[detail] ? 'error.main' : 'inherit'
-                    } 
-                  }}
-                />
-              </ListItem>
-            ))}
-          </List>
-          <Box sx={{ mt: 2 }}>
-            {priceChanged && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Старая стоимость: {originalPrice.toFixed(2)} ₾
-              </Typography>
-            )}
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color: priceChanged ? 'error.main' : 'inherit'
-              }}
-            >
-              Итоговая стоимость: {totalPrice.toFixed(2)} ₾
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                const textToCopy = [
-                  customerName ? `Заказ: ${customerName}` : '',
-                  comment ? `Комментарий: ${comment}` : '',
-                  ...calculationDetails,
-                  `Итоговая стоимость: ${totalPrice.toFixed(2)} ₾`
-                ].filter(Boolean).join('\n');
-                navigator.clipboard.writeText(textToCopy);
-              }}
-              sx={{ mt: 2 }}
-            >
-              Скопировать детали
-            </Button>
-          </Box>
-        </Paper>
-      </Grid>
+  const handleNewProject = () => {
+    setCustomerName('');
+    setConfiguration('');
+    setGlassColor('clear');
+    setGlassThickness('8');
+    setHardwareColor('');
+    setGlassHeight('');
+    setGlassWidth('');
+    setDoorWidth('');
+    setProfileCount(1);
+    setDelivery(true);
+    setInstallation(true);
+    setAdditionalRail(false);
+    setComment('');
+    setErrors({});
+    setEditingId(null);
+    setPriceChanged(false);
+    setChangedDetails({});
+    setCalculationDetails([]);
+    setTotalPrice(0);
+    setOriginalPrice(0);
+    setStatus('Рассчет');
+    setOriginalStatus('Рассчет');
+    setGlassType('stationary');
+    setProfileType('');
+    setIsOpeningSize(true);
+    setOpeningLength('');
+    setOpeningHeight('');
+    localStorage.removeItem('calculatorState');
+  };
 
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 3, height: '100%' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5">
-              {editingId ? 'Редактирование' : 'Новый проект'}
-            </Typography>
-            <Box>
-              <Button 
-                variant="outlined" 
-                onClick={handleNewProject} 
-                sx={{ mr: 1 }}
+  return (
+    <Box sx={{ p: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Paper 
+            sx={{ 
+              p: 2,
+              position: { xs: 'sticky', md: 'static' },
+              top: 0,
+              zIndex: 1000,
+              backgroundColor: 'background.paper',
+              boxShadow: { xs: '0 2px 4px rgba(0,0,0,0.1)', md: 'none' }
+            }}
+          >
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleNewProject}
+                fullWidth
               >
                 Новый проект
               </Button>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={handleSave}
-                sx={{ mr: 1 }}
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpenSaveDialog(true)}
+                fullWidth
               >
-                {editingId ? 'Сохранить' : 'Сохранить проект'}
+                Сохранить
               </Button>
             </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControl fullWidth>
-              <InputLabel>Статус</InputLabel>
-              <Select
-                value={status}
-                label="Статус"
-                onChange={handleStatusChange}
-              >
-                <MenuItem value="Рассчет">Рассчет</MenuItem>
-                <MenuItem value="Согласован">Согласован</MenuItem>
-                <MenuItem value="Заказан">Заказан</MenuItem>
-                <MenuItem value="Стекло доставлено">Стекло доставлено</MenuItem>
-                <MenuItem value="Установка">Установка</MenuItem>
-                <MenuItem value="Установлено">Установлено</MenuItem>
-                <MenuItem value="Оплачено">Оплачено</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Заказ"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value.slice(0, 500))}
-              fullWidth
-              error={!!errors.customerName}
-              helperText={errors.customerName}
-              required
-            />
-
-            <FormControl fullWidth error={!!errors.configuration} required>
-              <InputLabel>Конфигурация</InputLabel>
-              <Select
-                value={configuration}
-                label="Конфигурация"
-                onChange={handleConfigurationChange}
-              >
-                <MenuItem value="glass">Стекляшка</MenuItem>
-                <MenuItem value="straight">Прямая раздвижная</MenuItem>
-                <MenuItem value="corner">Угловая раздвижная</MenuItem>
-                <MenuItem value="straight-swing">Прямая распашная</MenuItem>
-                <MenuItem value="corner-swing">Угловая распашная</MenuItem>
-              </Select>
-              {errors.configuration && <FormHelperText>{errors.configuration}</FormHelperText>}
-            </FormControl>
-
-            {configuration === 'glass' && (
-              <>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <FormControl fullWidth error={!!errors.glassColor}>
-                      <InputLabel>Цвет стекла</InputLabel>
-                      <Select
-                        value={glassColor}
-                        onChange={(e) => {
-                          setGlassColor(e.target.value);
-                          setErrors(prev => ({ ...prev, glassColor: '' }));
-                        }}
-                        label="Цвет стекла"
-                      >
-                        <MenuItem value={GLASS_TYPES.CLEAR}>Обычное</MenuItem>
-                        <MenuItem value={GLASS_TYPES.ULTRA_CLEAR}>Ультра Прозрачное</MenuItem>
-                        <MenuItem value={GLASS_TYPES.MATTE_SANDBLASTED}>Матовое пескоструй</MenuItem>
-                        <MenuItem value={GLASS_TYPES.MATTE_FACTORY} disabled={glassThickness === GLASS_THICKNESS.EIGHT}>Матовое заводское</MenuItem>
-                        <MenuItem value={GLASS_TYPES.BRONZE}>Бронза</MenuItem>
-                        <MenuItem value={GLASS_TYPES.GRAPHITE_RUS}>Графит Рус</MenuItem>
-                        <MenuItem value={GLASS_TYPES.GRAPHITE_IRAN}>Графит Иран</MenuItem>
-                      </Select>
-                      {errors.glassColor && (
-                        <FormHelperText>{errors.glassColor}</FormHelperText>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <FormControl fullWidth error={!!errors.hardwareColor} required>
-                      <InputLabel>Цвет фурнитуры</InputLabel>
-                      <Select
-                        value={hardwareColor}
-                        label="Цвет фурнитуры"
-                        onChange={(e: SelectChangeEvent) => setHardwareColor(e.target.value)}
-                      >
-                        <MenuItem value="chrome">Хром</MenuItem>
-                        <MenuItem value="matte">Матовый</MenuItem>
-                        <MenuItem value="black">Черный</MenuItem>
-                        <MenuItem value="gold">Золотой</MenuItem>
-                      </Select>
-                      {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
-                    </FormControl>
-                  </Grid>
-                </Grid>
-
-                <FormControl fullWidth error={!!errors.glassThickness} required>
-                  <InputLabel>Толщина стекла</InputLabel>
-                  <Select
-                    value={glassThickness}
-                    label="Толщина стекла"
-                    onChange={(e: SelectChangeEvent) => setGlassThickness(e.target.value)}
-                  >
-                    <MenuItem value={GLASS_THICKNESS.EIGHT} disabled={glassColor === GLASS_TYPES.MATTE_FACTORY}>8 мм</MenuItem>
-                    <MenuItem value={GLASS_THICKNESS.TEN}>10 мм</MenuItem>
-                  </Select>
-                  {errors.glassThickness && <FormHelperText>{errors.glassThickness}</FormHelperText>}
-                </FormControl>
-
-                <TextField
-                  label="Количество профиля"
-                  type="number"
-                  value={profileCount}
-                  onChange={(e) => {
-                    const value = e.target.value === '' ? '' : parseInt(e.target.value);
-                    if (value === '' || (value >= 0 && value <= 9)) {
-                      setProfileCount(value);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (e.target.value === '') {
-                      setProfileCount(0);
-                    }
-                  }}
-                  inputProps={{ min: 0, max: 9 }}
-                  fullWidth
-                  error={!!errors.profileCount}
-                  helperText={errors.profileCount}
-                  required
-                />
-
-                <TextField
-                  label="Высота стекла (мм)"
-                  type="number"
-                  value={glassHeight}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (value >= 0 && value <= 5000) {
-                      setGlassHeight(e.target.value);
-                    }
-                  }}
-                  inputProps={{ min: 0, max: 5000 }}
-                  fullWidth
-                  error={!!errors.glassHeight}
-                  helperText={errors.glassHeight}
-                  required
-                />
-
-                <TextField
-                  label="Ширина стекла (мм)"
-                  type="number"
-                  value={glassWidth}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (value >= 0 && value <= 5000) {
-                      setGlassWidth(e.target.value);
-                    }
-                  }}
-                  inputProps={{ min: 0, max: 5000 }}
-                  fullWidth
-                  error={!!errors.glassWidth}
-                  helperText={errors.glassWidth}
-                  required
-                />
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={delivery}
-                        onChange={(e) => setDelivery(e.target.checked)}
-                      />
-                    }
-                    label="Доставка"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={installation}
-                        onChange={(e) => setInstallation(e.target.checked)}
-                      />
-                    }
-                    label="Установка"
-                  />
-                </Box>
-
-                <TextField
-                  label="Комментарий"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value.slice(0, 2000))}
-                  fullWidth
-                  multiline
-                  rows={2}
-                  helperText={`${comment.length}/2000`}
-                />
-              </>
-            )}
-
-            {configuration === 'straight' && (
-              <>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={!isOpeningSize}
-                      onChange={handleOpeningSizeChange}
-                    />
-                  }
-                  label="Указать размеры стекла"
-                />
-                
-                {isOpeningSize ? (
-                  <>
-                    <TextField
-                      label="Длина проема (мм)"
-                      type="number"
-                      value={openingLength}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 5000)) {
-                          setOpeningLength(value);
-                        }
-                      }}
-                      inputProps={{ min: 0, max: 5000 }}
-                      fullWidth
-                      error={!!errors.openingLength}
-                      helperText={errors.openingLength}
-                      required
-                    />
-                    <TextField
-                      label="Высота кабины (мм)"
-                      type="number"
-                      value={openingHeight}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 5000)) {
-                          setOpeningHeight(value);
-                        }
-                      }}
-                      inputProps={{ min: 0, max: 5000 }}
-                      fullWidth
-                      error={!!errors.openingHeight}
-                      helperText={errors.openingHeight}
-                      required
-                    />
-                  </>
-                ) : (
-                  <>
-                    <TextField
-                      label="Высота стекла (мм)"
-                      type="number"
-                      value={glassHeight}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value >= 0 && value <= 5000) {
-                          setGlassHeight(e.target.value);
-                        }
-                      }}
-                      inputProps={{ min: 0, max: 5000 }}
-                      fullWidth
-                      required
-                    />
-                    <TextField
-                      label="Ширина стационарного стекла (мм)"
-                      type="number"
-                      value={glassWidth}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value >= 0 && value <= 5000) {
-                          setGlassWidth(e.target.value);
-                        }
-                      }}
-                      inputProps={{ min: 0, max: 5000 }}
-                      fullWidth
-                      required
-                    />
-                    <TextField
-                      label="Ширина двери (мм)"
-                      type="number"
-                      value={doorWidth}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value >= 0 && value <= 5000) {
-                          setDoorWidth(e.target.value);
-                        }
-                      }}
-                      inputProps={{ min: 0, max: 5000 }}
-                      fullWidth
-                      required
-                    />
-                  </>
-                )}
-
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <FormControl fullWidth error={!!errors.glassColor} required>
-                      <InputLabel>Цвет стекла</InputLabel>
-                      <Select
-                        value={glassColor}
-                        label="Цвет стекла"
-                        onChange={(e: SelectChangeEvent) => setGlassColor(e.target.value)}
-                      >
-                        <MenuItem value={GLASS_TYPES.CLEAR}>Обычное</MenuItem>
-                        <MenuItem value={GLASS_TYPES.ULTRA_CLEAR}>Ультра Прозрачное</MenuItem>
-                        <MenuItem value={GLASS_TYPES.MATTE_SANDBLASTED}>Матовое пескоструй</MenuItem>
-                        <MenuItem value={GLASS_TYPES.MATTE_FACTORY} disabled={glassThickness === GLASS_THICKNESS.EIGHT}>Матовое заводское</MenuItem>
-                        <MenuItem value={GLASS_TYPES.BRONZE}>Бронза</MenuItem>
-                        <MenuItem value={GLASS_TYPES.GRAPHITE_RUS}>Графит Рус</MenuItem>
-                        <MenuItem value={GLASS_TYPES.GRAPHITE_IRAN}>Графит Иран</MenuItem>
-                      </Select>
-                      {errors.glassColor && <FormHelperText>{errors.glassColor}</FormHelperText>}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <FormControl fullWidth error={!!errors.hardwareColor} required>
-                      <InputLabel>Цвет фурнитуры</InputLabel>
-                      <Select
-                        value={hardwareColor}
-                        label="Цвет фурнитуры"
-                        onChange={(e: SelectChangeEvent) => setHardwareColor(e.target.value)}
-                      >
-                        <MenuItem value="chrome">Хром</MenuItem>
-                        <MenuItem value="matte">Матовый</MenuItem>
-                        <MenuItem value="black">Черный</MenuItem>
-                        <MenuItem value="gold">Золотой</MenuItem>
-                      </Select>
-                      {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
-                    </FormControl>
-                  </Grid>
-                </Grid>
-
-                <FormControl fullWidth error={!!errors.glassThickness} required>
-                  <InputLabel>Толщина стекла</InputLabel>
-                  <Select
-                    value={glassThickness}
-                    label="Толщина стекла"
-                    onChange={(e: SelectChangeEvent) => setGlassThickness(e.target.value)}
-                  >
-                    <MenuItem value={GLASS_THICKNESS.EIGHT} disabled={glassColor === GLASS_TYPES.MATTE_FACTORY}>8 мм</MenuItem>
-                    <MenuItem value={GLASS_THICKNESS.TEN}>10 мм</MenuItem>
-                  </Select>
-                  {errors.glassThickness && <FormHelperText>{errors.glassThickness}</FormHelperText>}
-                </FormControl>
-
-                <TextField
-                  label="Количество профиля"
-                  type="number"
-                  value={profileCount}
-                  onChange={(e) => {
-                    const value = e.target.value === '' ? '' : parseInt(e.target.value);
-                    if (value === '' || (value >= 0 && value <= 9)) {
-                      setProfileCount(value);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (e.target.value === '') {
-                      setProfileCount(0);
-                    }
-                  }}
-                  inputProps={{ min: 0, max: 9 }}
-                  fullWidth
-                  error={!!errors.profileCount}
-                  helperText={errors.profileCount}
-                  required
-                />
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={delivery}
-                        onChange={(e) => setDelivery(e.target.checked)}
-                      />
-                    }
-                    label="Доставка"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={installation}
-                        onChange={(e) => setInstallation(e.target.checked)}
-                      />
-                    }
-                    label="Установка"
-                  />
-                </Box>
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={additionalRail}
-                      onChange={(e) => setAdditionalRail(e.target.checked)}
-                    />
-                  }
-                  label="Дополнительная направляющая"
-                />
-
-                <TextField
-                  label="Комментарий"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value.slice(0, 2000))}
-                  fullWidth
-                  multiline
-                  rows={2}
-                  helperText={`${comment.length}/2000`}
-                />
-              </>
-            )}
-          </Box>
-        </Paper>
-      </Grid>
-
-      <Grid item xs={12} md={3}>
-        <Typography variant="h6" gutterBottom>
-          Сохраненные проекты
-        </Typography>
-        <TextField
-          label="Поиск по имени"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          fullWidth
-          size="small"
-          sx={{ mb: 2 }}
-        />
-        <Stack spacing={2}>
-          {filteredConfigs.map((config) => (
-            <Paper 
-              key={config.id} 
-              sx={{ 
-                position: 'relative', 
-                p: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Tooltip title={config.customerName} placement="top">
-                  <Typography 
-                    component="span" 
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={3} sx={{ pl: '50px' }}>
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Детали расчета:
+            </Typography>
+            <List sx={{ pl: 0 }}>
+              {customerName && (
+                <ListItem sx={{ pl: 0, py: 0.5 }}>
+                  <ListItemText 
+                    primary={`Название проекта: ${customerName}`}
                     sx={{ 
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      maxWidth: '200px',
-                      display: '-webkit-box'
+                      '& .MuiListItemText-primary': { 
+                        fontSize: '0.9rem',
+                        lineHeight: 1.2,
+                        fontWeight: 'bold'
+                      } 
                     }}
-                  >
-                    {config.customerName}
-                  </Typography>
-                </Tooltip>
-                <Chip 
-                  label={config.status} 
-                  color={
-                    config.status === 'Оплачено' ? 'success' :
-                    config.status === 'Рассчет' ? 'default' :
-                    'primary'
-                  }
-                  size="small"
-                />
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography component="span" variant="body2">
-                  Стоимость: {config.totalPrice.toFixed(2)} ₾
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton edge="end" onClick={() => handleEdit(config)} size="small">
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton edge="end" onClick={() => handleDelete(config.id)} size="small">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Box>
-              {config.comment && (
-                <Tooltip title={config.comment} placement="top">
-                  <Typography 
-                    component="span" 
-                    variant="body2" 
-                    color="text.secondary" 
-                    sx={{ 
-                      mt: 1, 
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      display: '-webkit-box'
-                    }}
-                  >
-                    {config.comment}
-                  </Typography>
-                </Tooltip>
+                  />
+                </ListItem>
               )}
-            </Paper>
-          ))}
-        </Stack>
-      </Grid>
+              {comment && (
+                <ListItem sx={{ pl: 0, py: 0.5 }}>
+                  <ListItemText 
+                    primary={`Комментарий: ${comment}`}
+                    sx={{ 
+                      '& .MuiListItemText-primary': { 
+                        fontSize: '0.9rem',
+                        lineHeight: 1.2,
+                        fontStyle: 'italic'
+                      } 
+                    }}
+                  />
+                </ListItem>
+              )}
+              {calculationDetails.map((detail, index) => (
+                <ListItem key={index} sx={{ pl: 0, py: 0.5 }}>
+                  <ListItemText 
+                    primary={detail} 
+                    sx={{ 
+                      '& .MuiListItemText-primary': { 
+                        fontSize: '0.9rem',
+                        lineHeight: 1.2,
+                        color: changedDetails[detail] ? 'error.main' : 'inherit'
+                      } 
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+            <Box sx={{ mt: 2 }}>
+              {priceChanged && (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  Старая стоимость: {originalPrice.toFixed(2)} ₾
+                </Typography>
+              )}
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: priceChanged ? 'error.main' : 'inherit'
+                }}
+              >
+                Итоговая стоимость: {totalPrice.toFixed(2)} ₾
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  const textToCopy = [
+                    customerName ? `Название проекта: ${customerName}` : '',
+                    comment ? `Комментарий: ${comment}` : '',
+                    ...calculationDetails,
+                    `Итоговая стоимость: ${totalPrice.toFixed(2)} ₾`
+                  ].filter(Boolean).join('\n');
+                  navigator.clipboard.writeText(textToCopy);
+                }}
+                sx={{ mt: 2 }}
+              >
+                Скопировать детали
+              </Button>
+            </Box>
+          </Paper>
+        </Grid>
 
-      <Snackbar 
-        open={showSuccessMessage} 
-        autoHideDuration={3000} 
-        onClose={handleCloseSuccessMessage}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleCloseSuccessMessage} 
-          severity="success" 
-          sx={{ 
-            width: '100%',
-            backgroundColor: '#4caf50',
-            color: 'white',
-            '& .MuiAlert-icon': {
-              color: 'white'
-            },
-            '& .MuiAlert-message': {
-              color: 'white'
-            },
-            '& .MuiAlert-action': {
-              color: 'white'
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <FormControl fullWidth>
+                <InputLabel>Статус</InputLabel>
+                <Select
+                  value={status}
+                  label="Статус"
+                  onChange={handleStatusChange}
+                >
+                  <MenuItem value="Рассчет">Рассчет</MenuItem>
+                  <MenuItem value="Согласован">Согласован</MenuItem>
+                  <MenuItem value="Заказан">Заказан</MenuItem>
+                  <MenuItem value="Стекло доставлено">Стекло доставлено</MenuItem>
+                  <MenuItem value="Установка">Установка</MenuItem>
+                  <MenuItem value="Установлено">Установлено</MenuItem>
+                  <MenuItem value="Оплачено">Оплачено</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Название проекта"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value.slice(0, 500))}
+                fullWidth
+                error={!!errors.customerName}
+                helperText={errors.customerName}
+                required
+              />
+
+              <FormControl fullWidth error={!!errors.configuration} required>
+                <InputLabel>Конфигурация</InputLabel>
+                <Select
+                  value={configuration}
+                  label="Конфигурация"
+                  onChange={handleConfigurationChange}
+                >
+                  <MenuItem value="glass">Стекляшка</MenuItem>
+                  <MenuItem value="straight">Прямая раздвижная</MenuItem>
+                  <MenuItem value="corner">Угловая раздвижная</MenuItem>
+                  <MenuItem value="straight-swing">Прямая распашная</MenuItem>
+                  <MenuItem value="corner-swing">Угловая распашная</MenuItem>
+                </Select>
+                {errors.configuration && <FormHelperText>{errors.configuration}</FormHelperText>}
+              </FormControl>
+
+              {configuration === 'glass' && (
+                <>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <FormControl fullWidth error={!!errors.glassColor}>
+                        <InputLabel>Цвет стекла</InputLabel>
+                        <Select
+                          value={glassColor}
+                          onChange={(e) => {
+                            setGlassColor(e.target.value);
+                            setErrors(prev => ({ ...prev, glassColor: '' }));
+                          }}
+                          label="Цвет стекла"
+                        >
+                          <MenuItem value={GLASS_TYPES.CLEAR}>Обычное</MenuItem>
+                          <MenuItem value={GLASS_TYPES.ULTRA_CLEAR}>Ультра Прозрачное</MenuItem>
+                          <MenuItem value={GLASS_TYPES.MATTE_SANDBLASTED}>Матовое пескоструй</MenuItem>
+                          <MenuItem value={GLASS_TYPES.MATTE_FACTORY} disabled={glassThickness === GLASS_THICKNESS.EIGHT}>Матовое заводское</MenuItem>
+                          <MenuItem value={GLASS_TYPES.BRONZE}>Бронза</MenuItem>
+                          <MenuItem value={GLASS_TYPES.GRAPHITE_RUS}>Графит Рус</MenuItem>
+                          <MenuItem value={GLASS_TYPES.GRAPHITE_IRAN}>Графит Иран</MenuItem>
+                        </Select>
+                        {errors.glassColor && (
+                          <FormHelperText>{errors.glassColor}</FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControl fullWidth error={!!errors.hardwareColor} required>
+                        <InputLabel>Цвет фурнитуры</InputLabel>
+                        <Select
+                          value={hardwareColor}
+                          label="Цвет фурнитуры"
+                          onChange={(e: SelectChangeEvent) => setHardwareColor(e.target.value)}
+                        >
+                          <MenuItem value="chrome">Хром</MenuItem>
+                          <MenuItem value="matte">Матовый</MenuItem>
+                          <MenuItem value="black">Черный</MenuItem>
+                          <MenuItem value="gold">Золотой</MenuItem>
+                        </Select>
+                        {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+
+                  <FormControl fullWidth error={!!errors.glassThickness} required>
+                    <InputLabel>Толщина стекла</InputLabel>
+                    <Select
+                      value={glassThickness}
+                      label="Толщина стекла"
+                      onChange={(e: SelectChangeEvent) => setGlassThickness(e.target.value)}
+                    >
+                      <MenuItem value={GLASS_THICKNESS.EIGHT} disabled={glassColor === GLASS_TYPES.MATTE_FACTORY}>8 мм</MenuItem>
+                      <MenuItem value={GLASS_THICKNESS.TEN}>10 мм</MenuItem>
+                    </Select>
+                    {errors.glassThickness && <FormHelperText>{errors.glassThickness}</FormHelperText>}
+                  </FormControl>
+
+                  <TextField
+                    label="Количество профиля"
+                    type="number"
+                    value={profileCount}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? '' : parseInt(e.target.value);
+                      if (value === '' || (value >= 0 && value <= 9)) {
+                        setProfileCount(value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value === '') {
+                        setProfileCount(0);
+                      }
+                    }}
+                    inputProps={{ min: 0, max: 9 }}
+                    fullWidth
+                    error={!!errors.profileCount}
+                    helperText={errors.profileCount}
+                    required
+                  />
+
+                  <TextField
+                    label="Высота стекла (мм)"
+                    type="number"
+                    value={glassHeight}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value >= 0 && value <= 5000) {
+                        setGlassHeight(e.target.value);
+                      }
+                    }}
+                    inputProps={{ min: 0, max: 5000 }}
+                    fullWidth
+                    error={!!errors.glassHeight}
+                    helperText={errors.glassHeight}
+                    required
+                  />
+
+                  <TextField
+                    label="Ширина стекла (мм)"
+                    type="number"
+                    value={glassWidth}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value >= 0 && value <= 5000) {
+                        setGlassWidth(e.target.value);
+                      }
+                    }}
+                    inputProps={{ min: 0, max: 5000 }}
+                    fullWidth
+                    error={!!errors.glassWidth}
+                    helperText={errors.glassWidth}
+                    required
+                  />
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={delivery}
+                          onChange={(e) => setDelivery(e.target.checked)}
+                        />
+                      }
+                      label="Доставка"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={installation}
+                          onChange={(e) => setInstallation(e.target.checked)}
+                        />
+                      }
+                      label="Установка"
+                    />
+                  </Box>
+
+                  <TextField
+                    label="Комментарий"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value.slice(0, 2000))}
+                    fullWidth
+                    multiline
+                    rows={2}
+                    helperText={`${comment.length}/2000`}
+                  />
+                </>
+              )}
+
+              {configuration === 'straight' && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={!isOpeningSize}
+                        onChange={handleOpeningSizeChange}
+                      />
+                    }
+                    label="Указать размеры стекла"
+                  />
+                  
+                  {isOpeningSize ? (
+                    <>
+                      <TextField
+                        label="Длина проема (мм)"
+                        type="number"
+                        value={openingLength}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 5000)) {
+                            setOpeningLength(value);
+                          }
+                        }}
+                        inputProps={{ min: 0, max: 5000 }}
+                        fullWidth
+                        error={!!errors.openingLength}
+                        helperText={errors.openingLength}
+                        required
+                      />
+                      <TextField
+                        label="Высота кабины (мм)"
+                        type="number"
+                        value={openingHeight}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 5000)) {
+                            setOpeningHeight(value);
+                          }
+                        }}
+                        inputProps={{ min: 0, max: 5000 }}
+                        fullWidth
+                        error={!!errors.openingHeight}
+                        helperText={errors.openingHeight}
+                        required
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <TextField
+                        label="Высота стекла (мм)"
+                        type="number"
+                        value={glassHeight}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value >= 0 && value <= 5000) {
+                            setGlassHeight(e.target.value);
+                          }
+                        }}
+                        inputProps={{ min: 0, max: 5000 }}
+                        fullWidth
+                        required
+                      />
+                      <TextField
+                        label="Ширина стационарного стекла (мм)"
+                        type="number"
+                        value={glassWidth}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value >= 0 && value <= 5000) {
+                            setGlassWidth(e.target.value);
+                          }
+                        }}
+                        inputProps={{ min: 0, max: 5000 }}
+                        fullWidth
+                        required
+                      />
+                      <TextField
+                        label="Ширина двери (мм)"
+                        type="number"
+                        value={doorWidth}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value >= 0 && value <= 5000) {
+                            setDoorWidth(e.target.value);
+                          }
+                        }}
+                        inputProps={{ min: 0, max: 5000 }}
+                        fullWidth
+                        required
+                      />
+                    </>
+                  )}
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <FormControl fullWidth error={!!errors.glassColor} required>
+                        <InputLabel>Цвет стекла</InputLabel>
+                        <Select
+                          value={glassColor}
+                          label="Цвет стекла"
+                          onChange={(e: SelectChangeEvent) => setGlassColor(e.target.value)}
+                        >
+                          <MenuItem value={GLASS_TYPES.CLEAR}>Обычное</MenuItem>
+                          <MenuItem value={GLASS_TYPES.ULTRA_CLEAR}>Ультра Прозрачное</MenuItem>
+                          <MenuItem value={GLASS_TYPES.MATTE_SANDBLASTED}>Матовое пескоструй</MenuItem>
+                          <MenuItem value={GLASS_TYPES.MATTE_FACTORY} disabled={glassThickness === GLASS_THICKNESS.EIGHT}>Матовое заводское</MenuItem>
+                          <MenuItem value={GLASS_TYPES.BRONZE}>Бронза</MenuItem>
+                          <MenuItem value={GLASS_TYPES.GRAPHITE_RUS}>Графит Рус</MenuItem>
+                          <MenuItem value={GLASS_TYPES.GRAPHITE_IRAN}>Графит Иран</MenuItem>
+                        </Select>
+                        {errors.glassColor && <FormHelperText>{errors.glassColor}</FormHelperText>}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControl fullWidth error={!!errors.hardwareColor} required>
+                        <InputLabel>Цвет фурнитуры</InputLabel>
+                        <Select
+                          value={hardwareColor}
+                          label="Цвет фурнитуры"
+                          onChange={(e: SelectChangeEvent) => setHardwareColor(e.target.value)}
+                        >
+                          <MenuItem value="chrome">Хром</MenuItem>
+                          <MenuItem value="matte">Матовый</MenuItem>
+                          <MenuItem value="black">Черный</MenuItem>
+                          <MenuItem value="gold">Золотой</MenuItem>
+                        </Select>
+                        {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+
+                  <FormControl fullWidth error={!!errors.glassThickness} required>
+                    <InputLabel>Толщина стекла</InputLabel>
+                    <Select
+                      value={glassThickness}
+                      label="Толщина стекла"
+                      onChange={(e: SelectChangeEvent) => setGlassThickness(e.target.value)}
+                    >
+                      <MenuItem value={GLASS_THICKNESS.EIGHT} disabled={glassColor === GLASS_TYPES.MATTE_FACTORY}>8 мм</MenuItem>
+                      <MenuItem value={GLASS_THICKNESS.TEN}>10 мм</MenuItem>
+                    </Select>
+                    {errors.glassThickness && <FormHelperText>{errors.glassThickness}</FormHelperText>}
+                  </FormControl>
+
+                  <TextField
+                    label="Количество профиля"
+                    type="number"
+                    value={profileCount}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? '' : parseInt(e.target.value);
+                      if (value === '' || (value >= 0 && value <= 9)) {
+                        setProfileCount(value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value === '') {
+                        setProfileCount(0);
+                      }
+                    }}
+                    inputProps={{ min: 0, max: 9 }}
+                    fullWidth
+                    error={!!errors.profileCount}
+                    helperText={errors.profileCount}
+                    required
+                  />
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={delivery}
+                          onChange={(e) => setDelivery(e.target.checked)}
+                        />
+                      }
+                      label="Доставка"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={installation}
+                          onChange={(e) => setInstallation(e.target.checked)}
+                        />
+                      }
+                      label="Установка"
+                    />
+                  </Box>
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={additionalRail}
+                        onChange={(e) => setAdditionalRail(e.target.checked)}
+                      />
+                    }
+                    label="Дополнительная направляющая"
+                  />
+
+                  <TextField
+                    label="Комментарий"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value.slice(0, 2000))}
+                    fullWidth
+                    multiline
+                    rows={2}
+                    helperText={`${comment.length}/2000`}
+                  />
+                </>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Typography variant="h6" gutterBottom>
+            Сохраненные проекты
+          </Typography>
+          <TextField
+            label="Поиск по имени"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            fullWidth
+            size="small"
+            sx={{ mb: 2 }}
+          />
+          <Stack spacing={2}>
+            {filteredConfigs.map((config) => (
+              <Paper 
+                key={config.id} 
+                sx={{ 
+                  position: 'relative', 
+                  p: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Tooltip title={config.customerName} placement="top">
+                    <Typography 
+                      component="span" 
+                      sx={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        maxWidth: '200px',
+                        display: '-webkit-box'
+                      }}
+                    >
+                      {config.customerName}
+                    </Typography>
+                  </Tooltip>
+                  <Chip 
+                    label={config.status} 
+                    color={
+                      config.status === 'Оплачено' ? 'success' :
+                      config.status === 'Рассчет' ? 'default' :
+                      'primary'
+                    }
+                    size="small"
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography component="span" variant="body2">
+                    Стоимость: {config.totalPrice.toFixed(2)} ₾
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton edge="end" onClick={() => handleEdit(config)} size="small">
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton edge="end" onClick={() => handleDelete(config.id)} size="small">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+                {config.comment && (
+                  <Tooltip title={config.comment} placement="top">
+                    <Typography 
+                      component="span" 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        mt: 1, 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        display: '-webkit-box'
+                      }}
+                    >
+                      {config.comment}
+                    </Typography>
+                  </Tooltip>
+                )}
+              </Paper>
+            ))}
+          </Stack>
+        </Grid>
+
+        <Snackbar 
+          open={showSuccessMessage} 
+          autoHideDuration={3000} 
+          onClose={handleCloseSuccessMessage}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseSuccessMessage} 
+            severity="success" 
+            sx={{ 
+              width: '100%',
+              backgroundColor: '#4caf50',
+              color: 'white',
+              '& .MuiAlert-icon': {
+                color: 'white'
+              },
+              '& .MuiAlert-message': {
+                color: 'white'
+              },
+              '& .MuiAlert-action': {
+                color: 'white'
+              }
+            }}
+          >
+            Проект успешно сохранен!
+          </Alert>
+        </Snackbar>
+
+        <Dialog
+          open={openSaveDialog}
+          onClose={handleSaveDialogClose}
+          PaperProps={{
+            sx: {
+              minWidth: '500px',
+              maxWidth: '600px',
+              borderRadius: 2,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            }
+          }}
+          BackdropProps={{
+            sx: {
+              backdropFilter: 'blur(4px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)'
             }
           }}
         >
-          Проект успешно сохранен!
-        </Alert>
-      </Snackbar>
-
-      <Dialog
-        open={openSaveDialog}
-        onClose={handleSaveDialogClose}
-        PaperProps={{
-          sx: {
-            minWidth: '500px',
-            maxWidth: '600px',
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          }
-        }}
-        BackdropProps={{
-          sx: {
-            backdropFilter: 'blur(4px)',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }}
-      >
-        <DialogTitle sx={{ fontSize: '1.5rem', pb: 1 }}>
-          Сохранить изменения?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ fontSize: '1.1rem', color: 'text.primary' }}>
-            Цена проекта была изменена. Выберите способ сохранения:
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-          <Button onClick={handleSaveDialogClose} color="inherit">
-            Отменить
-          </Button>
-          <Box>
-            <Button onClick={handleSave} color="primary" sx={{ mr: 1 }}>
-              Сохранить без изменения цены
+          <DialogTitle sx={{ fontSize: '1.5rem', pb: 1 }}>
+            Сохранить изменения?
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ fontSize: '1.1rem', color: 'text.primary' }}>
+              Цена проекта была изменена. Выберите способ сохранения:
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+            <Button onClick={handleSaveDialogClose} color="inherit">
+              Отменить
             </Button>
-            <Button onClick={handleSave} color="error" variant="contained">
-              Сохранить с новой ценой
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={openNewProjectDialog}
-        onClose={handleNewProjectDialogClose}
-      >
-        <DialogTitle>Сохранить новый проект?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Вы хотите сохранить новый проект?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-          <Button onClick={handleNewProjectDialogClose} color="inherit">
-            Отменить
-          </Button>
-          <Button onClick={handleNewProjectSave} color="primary" variant="contained">
-            Сохранить
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Grid>
+            <Box>
+              <Button onClick={handleSave} color="primary" sx={{ mr: 1 }}>
+                Сохранить без изменения цены
+              </Button>
+              <Button onClick={handleSave} color="error" variant="contained">
+                Сохранить с новой ценой
+              </Button>
+            </Box>
+          </DialogActions>
+        </Dialog>
+      </Grid>
+    </Box>
   );
 };
 
