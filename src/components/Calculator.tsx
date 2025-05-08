@@ -34,6 +34,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { calculatorStyles } from '../styles/calculatorStyles';
 
 interface PriceConfig {
@@ -275,6 +276,7 @@ const Calculator: React.FC = () => {
   const [newHardwareCount, setNewHardwareCount] = useState<number>(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Сохраняем состояние калькулятора при изменении
   useEffect(() => {
@@ -1359,6 +1361,33 @@ const Calculator: React.FC = () => {
     setProjectToDelete(null);
   };
 
+  const handleCopyDetails = async () => {
+    const detailsText = [
+      customerName && `Название проекта: ${customerName}`,
+      configuration && `Конфигурация: ${
+        configuration === 'glass' ? 'Стекляшка' :
+        configuration === 'straight' ? 'Прямая раздвижная' :
+        configuration === 'corner' ? 'Угловая раздвижная' :
+        configuration === 'unique' ? 'Уникальная конфигурация' : configuration
+      }`,
+      comment && `Комментарий: ${comment}`,
+      ...calculationDetails.map(detail => detail.replace(/(\d+\.?\d*)\s*₾/, (match, price) => {
+        const numPrice = parseFloat(price);
+        const currencySymbol = currency === 'BYN' ? 'BYN' : '₾';
+        return `${numPrice.toFixed(2)} ${currencySymbol}`;
+      })),
+      `Итоговая стоимость: ${totalPrice.toFixed(2)} ${currency === 'BYN' ? 'BYN' : '₾'}${prices.showUsdPrice ? ` (~${(totalPrice / prices.usdRate).toFixed(2)} $)` : ''}`
+    ].filter(Boolean).join('\n');
+
+    try {
+      await navigator.clipboard.writeText(detailsText);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
   return (
     <Box sx={calculatorStyles.root}>
       <Grid container spacing={1}>
@@ -1396,9 +1425,11 @@ const Calculator: React.FC = () => {
         {/* Левая колонка - Детали расчета */}
         <Grid item xs={12} md={3}>
           <Paper sx={calculatorStyles.leftColumn}>
-            <Typography variant="h6" gutterBottom>
-              Детали расчета:
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">
+                Детали расчета:
+              </Typography>
+            </Box>
             <List sx={calculatorStyles.list}>
               {customerName && (
                 <ListItem sx={calculatorStyles.listItem}>
@@ -1466,6 +1497,25 @@ const Calculator: React.FC = () => {
               <Box sx={calculatorStyles.price}>
                 {formatPrice(totalPrice)}
               </Box>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleCopyDetails}
+                fullWidth
+                sx={{ 
+                  mt: 2,
+                  backgroundColor: 'white',
+                  color: 'primary.main',
+                  borderColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'white',
+                    borderColor: 'primary.dark',
+                    color: 'primary.dark'
+                  }
+                }}
+              >
+                Скопировать
+              </Button>
             </Box>
           </Paper>
         </Grid>
@@ -2613,6 +2663,17 @@ const Calculator: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={copySuccess}
+        autoHideDuration={2000}
+        onClose={() => setCopySuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Детали расчета скопированы в буфер обмена
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
