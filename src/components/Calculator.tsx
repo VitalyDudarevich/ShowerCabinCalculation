@@ -106,6 +106,9 @@ interface SavedConfiguration {
   doorWidth: string;
   glassType: 'stationary' | 'door';
   profileType: string;
+  cornerLength: string;
+  cornerWidth: string;
+  glasses: Glass[];
 }
 
 interface ShowerConfig {
@@ -503,117 +506,28 @@ const Calculator: React.FC = () => {
     if (configuration === 'unique') {
       // Расчет стоимости для каждого стекла
       glasses.forEach((glass) => {
-        if (glass.height && glass.width) {
+        if (glass.height && glass.width && parseFloat(glass.height) > 0 && parseFloat(glass.width) > 0) {
           const glassArea = (parseFloat(glass.height) * parseFloat(glass.width)) / 1000000; // конвертация в м²
           let glassPrice = 0;
 
           if (glass.color === GLASS_TYPES.CLEAR) {
-            glassPrice = Math.ceil(parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm);
+            glassPrice = parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm;
           } else if (glass.color === GLASS_TYPES.ULTRA_CLEAR) {
-            glassPrice = Math.ceil(parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm);
+            glassPrice = parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm;
           } else if (glass.color === GLASS_TYPES.MATTE_SANDBLASTED) {
-            glassPrice = Math.ceil(parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm);
+            glassPrice = parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm;
           } else if (glass.color === GLASS_TYPES.MATTE_FACTORY) {
-            glassPrice = Math.ceil(prices.glassMatteFactory10mm);
+            glassPrice = prices.glassMatteFactory10mm;
           } else if ([GLASS_TYPES.BRONZE, GLASS_TYPES.GRAPHITE_RUS, GLASS_TYPES.GRAPHITE_IRAN].includes(glass.color as any)) {
-            glassPrice = Math.ceil(parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm);
+            glassPrice = parseFloat(glass.thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm;
           }
 
-          if (glassArea > 0) {
-            const glassCost = glassPrice * glassArea;
-            total += glassCost;
-            const glassTypeText = GLASS_TYPE_TEXT[glass.color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
-            details.push(`${glass.name}: ${glassTypeText} ${glass.thickness} мм (${glassArea.toFixed(2)} м²): ${Math.ceil(glassCost)} ₾`);
-          }
+          const glassCost = glassPrice * glassArea;
+          total += glassCost;
+          const glassTypeText = GLASS_TYPE_TEXT[glass.color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
+          details.push(`${glass.name}: ${glassTypeText} ${glass.thickness} мм (${glassArea.toFixed(2)} м²): ${glassCost.toFixed(2)} ₾`);
         }
       });
-
-      // Расчет стоимости фурнитуры
-      if (hardwareColor) {
-        let profilePrice = 0;
-        let hardwareType = '';
-        
-        if (hardwareColor === 'chrome') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileChrome8mm;
-            hardwareType = 'хром (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileChrome8mm;
-            hardwareType = 'хром (10 мм)';
-          }
-        } else if (hardwareColor === 'black') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileBlack;
-            hardwareType = 'черный (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileBlack;
-            hardwareType = 'черный (10 мм)';
-          }
-        } else if (hardwareColor === 'matte') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileMatte10mm;
-            hardwareType = 'матовый (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileMatte10mm;
-            hardwareType = 'матовый (10 мм)';
-          }
-        } else if (hardwareColor === 'gold') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileGold;
-            hardwareType = 'золотой (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileGold;
-            hardwareType = 'золотой (10 мм)';
-          }
-        }
-
-        if (profilePrice > 0) {
-          const profileCost = profilePrice * profileCount;
-          total += profileCost;
-          details.push(`Профиль ${hardwareType} (${profileCount} шт.): ${Math.ceil(profileCost)} ₾`);
-        }
-
-        // Расчет стоимости дополнительной фурнитуры
-        if (additionalHardware.customItems.length > 0) {
-          additionalHardware.customItems.forEach(item => {
-            if (item.count > 0) {
-              let itemPrice = 0;
-              
-              // Определяем цену в зависимости от типа фурнитуры
-              if (item.name.includes('Петля 90 градусов')) {
-                itemPrice = prices.hinge90 * item.count;
-              } else if (item.name.includes('Петля 180 градусов')) {
-                itemPrice = prices.hinge180 * item.count;
-              } else if (item.name.includes('Петля 135 градусов')) {
-                itemPrice = prices.hinge135 * item.count;
-              } else if (item.name.includes('Ручка')) {
-                itemPrice = prices.handleKnob * item.count;
-              } else if (item.name.includes('Крепление палка стена-стекло')) {
-                itemPrice = prices.mountingWallGlass * item.count;
-              } else if (item.name.includes('Крепление палка стена-стекло-стекло')) {
-                itemPrice = prices.mountingWallGlassGlass * item.count;
-              } else if (item.name.includes('Раздвижная система')) {
-                if (hardwareColor === 'chrome') {
-                  itemPrice = prices.slidingChrome * item.count;
-                } else if (hardwareColor === 'matte') {
-                  itemPrice = prices.slidingMatte * item.count;
-                } else if (hardwareColor === 'black') {
-                  itemPrice = prices.slidingBlack * item.count;
-                } else if (hardwareColor === 'gold') {
-                  itemPrice = prices.slidingGold * item.count;
-                }
-              } else if (item.name.includes('Дополнительная направляющая')) {
-                itemPrice = prices.additionalRail * item.count;
-              } else if (item.name.includes('Дополнительный профиль')) {
-                itemPrice = prices.profileTube * item.count;
-              }
-              
-              total += itemPrice;
-              details.push(`${item.name} (${item.count} шт.): ${Math.ceil(itemPrice)} ₾`);
-            }
-          });
-        }
-      }
     } else if (configuration === 'glass') {
       // Расчет для стекляшки
       if (glasses[0].height && glasses[0].width) {
@@ -621,73 +535,45 @@ const Calculator: React.FC = () => {
         let glassPrice = 0;
 
         if (glasses[0].color === GLASS_TYPES.CLEAR) {
-          glassPrice = Math.ceil(parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm);
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm;
         } else if (glasses[0].color === GLASS_TYPES.ULTRA_CLEAR) {
-          glassPrice = Math.ceil(parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm);
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm;
         } else if (glasses[0].color === GLASS_TYPES.MATTE_SANDBLASTED) {
-          glassPrice = Math.ceil(parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm);
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm;
         } else if (glasses[0].color === GLASS_TYPES.MATTE_FACTORY) {
-          glassPrice = Math.ceil(prices.glassMatteFactory10mm);
+          glassPrice = prices.glassMatteFactory10mm;
         } else if ([GLASS_TYPES.BRONZE, GLASS_TYPES.GRAPHITE_RUS, GLASS_TYPES.GRAPHITE_IRAN].includes(glasses[0].color as any)) {
-          glassPrice = Math.ceil(parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm);
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm;
         }
 
         const glassCost = glassPrice * glassArea;
         total += glassCost;
-        details.push(`Стекло ${GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное'} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${Math.ceil(glassCost)} ₾`);
-
-        // Добавляем стоимость фурнитуры
-        if (hardwareColor) {
-          let profilePrice = 0;
-          let hardwareType = '';
-          
-          if (hardwareColor === 'chrome') {
-            if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-              profilePrice = prices.profileChrome8mm;
-              hardwareType = 'хром (8 мм)';
-            } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-              profilePrice = prices.profileChrome8mm;
-              hardwareType = 'хром (10 мм)';
-            }
-          } else if (hardwareColor === 'black') {
-            if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-              profilePrice = prices.profileBlack;
-              hardwareType = 'черный (8 мм)';
-            } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-              profilePrice = prices.profileBlack;
-              hardwareType = 'черный (10 мм)';
-            }
-          } else if (hardwareColor === 'matte') {
-            if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-              profilePrice = prices.profileMatte10mm;
-              hardwareType = 'матовый (8 мм)';
-            } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-              profilePrice = prices.profileMatte10mm;
-              hardwareType = 'матовый (10 мм)';
-            }
-          } else if (hardwareColor === 'gold') {
-            if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-              profilePrice = prices.profileGold;
-              hardwareType = 'золотой (8 мм)';
-            } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-              profilePrice = prices.profileGold;
-              hardwareType = 'золотой (10 мм)';
-            }
-          }
-
-          const profileCost = profilePrice * profileCount;
-          total += profileCost;
-          details.push(`Фурнитура ${hardwareType} (${profileCount} шт.): ${Math.ceil(profileCost)} ₾`);
-        }
+        details.push(`Стекло ${GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное'} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${glassCost.toFixed(2)} ₾`);
       }
     } else if (configuration === 'straight') {
       // Расчет для прямой раздвижной
       if (isOpeningSize) {
         if (openingLength && openingHeight) {
-          const glassArea = (parseFloat(openingLength) * parseFloat(openingHeight)) / 1000000;
+          const adjustedLength = parseFloat(openingLength) + 30; // Добавляем 30 мм к ширине проема
+          const glassArea = (adjustedLength * parseFloat(openingHeight)) / 1000000; // конвертация в м²
           const glassTypeText = GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
-          total += prices.straightPrice * glassArea;
-          details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${Math.ceil(prices.straightPrice * glassArea)} ₾`);
+          let glassPrice = 0;
+
+          if (glasses[0].color === GLASS_TYPES.CLEAR) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm;
+          } else if (glasses[0].color === GLASS_TYPES.ULTRA_CLEAR) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm;
+          } else if (glasses[0].color === GLASS_TYPES.MATTE_SANDBLASTED) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm;
+          } else if (glasses[0].color === GLASS_TYPES.MATTE_FACTORY) {
+            glassPrice = prices.glassMatteFactory10mm;
+          } else if ([GLASS_TYPES.BRONZE, GLASS_TYPES.GRAPHITE_RUS, GLASS_TYPES.GRAPHITE_IRAN].includes(glasses[0].color as any)) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm;
+          }
+
+          const glassCost = glassPrice * glassArea;
+          total += glassCost;
+          details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${glassCost.toFixed(2)} ₾`);
         }
       } else {
         if (glasses[0].height && glasses[0].width && doorWidth) {
@@ -695,18 +581,140 @@ const Calculator: React.FC = () => {
           const doorArea = (parseFloat(glasses[0].height) * parseFloat(doorWidth)) / 1000000;
           const totalArea = stationaryArea + doorArea;
           const glassTypeText = GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
-          total += prices.straightPrice * totalArea;
-          details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${totalArea.toFixed(2)} м²): ${Math.ceil(prices.straightPrice * totalArea)} ₾`);
+          let glassPrice = 0;
+
+          if (glasses[0].color === GLASS_TYPES.CLEAR) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm;
+          } else if (glasses[0].color === GLASS_TYPES.ULTRA_CLEAR) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm;
+          } else if (glasses[0].color === GLASS_TYPES.MATTE_SANDBLASTED) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm;
+          } else if (glasses[0].color === GLASS_TYPES.MATTE_FACTORY) {
+            glassPrice = prices.glassMatteFactory10mm;
+          } else if ([GLASS_TYPES.BRONZE, GLASS_TYPES.GRAPHITE_RUS, GLASS_TYPES.GRAPHITE_IRAN].includes(glasses[0].color as any)) {
+            glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm;
+          }
+
+          const glassCost = glassPrice * totalArea;
+          total += glassCost;
+          details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${totalArea.toFixed(2)} м²): ${glassCost.toFixed(2)} ₾`);
         }
       }
     } else if (configuration === 'corner') {
       // Расчет для угловой раздвижной
       if (cornerLength && cornerWidth && glasses[0].height) {
-        const glassArea = (parseFloat(cornerLength) * parseFloat(cornerWidth)) / 1000000;
+        // Площадь первой стены (длина * высота)
+        const firstWallArea = (parseFloat(cornerLength) * parseFloat(glasses[0].height)) / 1000000;
+        // Площадь второй стены (ширина * высота)
+        const secondWallArea = (parseFloat(cornerWidth) * parseFloat(glasses[0].height)) / 1000000;
+        // Общая площадь стекла
+        const totalGlassArea = firstWallArea + secondWallArea;
         const glassTypeText = GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
-        total += prices.cornerPrice * glassArea;
-        details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${Math.ceil(prices.cornerPrice * glassArea)} ₾`);
+        let glassPrice = 0;
+
+        if (glasses[0].color === GLASS_TYPES.CLEAR) {
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassClear8mm : prices.glassClear10mm;
+        } else if (glasses[0].color === GLASS_TYPES.ULTRA_CLEAR) {
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassUltraClear8mm : prices.glassUltraClear10mm;
+        } else if (glasses[0].color === GLASS_TYPES.MATTE_SANDBLASTED) {
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm;
+        } else if (glasses[0].color === GLASS_TYPES.MATTE_FACTORY) {
+          glassPrice = prices.glassMatteFactory10mm;
+        } else if ([GLASS_TYPES.BRONZE, GLASS_TYPES.GRAPHITE_RUS, GLASS_TYPES.GRAPHITE_IRAN].includes(glasses[0].color as any)) {
+          glassPrice = parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT ? prices.glassTinted8mm : prices.glassTinted10mm;
+        }
+
+        const glassCost = glassPrice * totalGlassArea;
+        total += glassCost;
+        details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${totalGlassArea.toFixed(2)} м²): ${glassCost.toFixed(2)} ₾`);
       }
+    }
+
+    // Расчет стоимости профиля для всех конфигураций
+    if (hardwareColor && profileCount > 0) {
+      let profilePrice = 0;
+      let hardwareType = '';
+      
+      if (hardwareColor === 'chrome') {
+        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
+          profilePrice = prices.profileChrome8mm;
+          hardwareType = 'хром (8 мм)';
+        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
+          profilePrice = prices.profileChrome8mm;
+          hardwareType = 'хром (10 мм)';
+        }
+      } else if (hardwareColor === 'black') {
+        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
+          profilePrice = prices.profileBlack;
+          hardwareType = 'черный (8 мм)';
+        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
+          profilePrice = prices.profileBlack;
+          hardwareType = 'черный (10 мм)';
+        }
+      } else if (hardwareColor === 'matte') {
+        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
+          profilePrice = prices.profileMatte10mm;
+          hardwareType = 'матовый (8 мм)';
+        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
+          profilePrice = prices.profileMatte10mm;
+          hardwareType = 'матовый (10 мм)';
+        }
+      } else if (hardwareColor === 'gold') {
+        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
+          profilePrice = prices.profileGold;
+          hardwareType = 'золотой (8 мм)';
+        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
+          profilePrice = prices.profileGold;
+          hardwareType = 'золотой (10 мм)';
+        }
+      }
+
+      if (profilePrice > 0) {
+        const profileCost = profilePrice * profileCount;
+        total += profileCost;
+        details.push(`Профиль ${hardwareType} (${profileCount} шт.): ${profileCost.toFixed(2)} ₾`);
+      }
+    }
+
+    // Расчет стоимости дополнительной фурнитуры
+    if (additionalHardware.customItems.length > 0) {
+      additionalHardware.customItems.forEach(item => {
+        if (item.count > 0) {
+          let itemPrice = 0;
+          
+          // Определяем цену в зависимости от типа фурнитуры
+          if (item.name.includes('Петля 90 градусов')) {
+            itemPrice = prices.hinge90 * item.count;
+          } else if (item.name.includes('Петля 180 градусов')) {
+            itemPrice = prices.hinge180 * item.count;
+          } else if (item.name.includes('Петля 135 градусов')) {
+            itemPrice = prices.hinge135 * item.count;
+          } else if (item.name.includes('Ручка')) {
+            itemPrice = prices.handleKnob * item.count;
+          } else if (item.name.includes('Крепление палка стена-стекло')) {
+            itemPrice = prices.mountingWallGlass * item.count;
+          } else if (item.name.includes('Крепление палка стена-стекло-стекло')) {
+            itemPrice = prices.mountingWallGlassGlass * item.count;
+          } else if (item.name.includes('Раздвижная система')) {
+            if (hardwareColor === 'chrome') {
+              itemPrice = prices.slidingChrome * item.count;
+            } else if (hardwareColor === 'matte') {
+              itemPrice = prices.slidingMatte * item.count;
+            } else if (hardwareColor === 'black') {
+              itemPrice = prices.slidingBlack * item.count;
+            } else if (hardwareColor === 'gold') {
+              itemPrice = prices.slidingGold * item.count;
+            }
+          } else if (item.name.includes('Дополнительная направляющая')) {
+            itemPrice = prices.additionalRail * item.count;
+          } else if (item.name.includes('Дополнительный профиль')) {
+            itemPrice = prices.profileTube * item.count;
+          }
+          
+          total += itemPrice;
+          details.push(`${item.name} (${item.count} шт.): ${itemPrice.toFixed(2)} ₾`);
+        }
+      });
     }
 
     // Стоимость доставки
@@ -820,17 +828,9 @@ const Calculator: React.FC = () => {
       if (!glasses[0].thickness) newErrors.glassThickness = 'Выберите толщину стекла';
       if (!hardwareColor) newErrors.hardwareColor = 'Выберите цвет фурнитуры';
       if (profileCount < 0 || profileCount > 9) newErrors.profileCount = 'Количество профиля должно быть от 0 до 9';
-
-      // Проверка размеров стекла
-      if (!glasses[0].height || parseFloat(glasses[0].height) < 10) {
-        newErrors.glassHeight = 'Высота должна быть не менее 10 мм';
-      }
-      if (!glasses[0].width || parseFloat(glasses[0].width) < 10) {
-        newErrors.glassWidth = 'Ширина должна быть не менее 10 мм';
-      }
     }
 
-    // Дополнительные проверки для прямой раздвижной
+    // Проверки для прямой раздвижной
     if (configuration === 'straight') {
       if (isOpeningSize) {
         if (!openingLength || parseFloat(openingLength) < 10) {
@@ -840,19 +840,28 @@ const Calculator: React.FC = () => {
           newErrors.openingHeight = 'Высота кабины должна быть не менее 10 мм';
         }
       } else {
+        if (!glasses[0].height || parseFloat(glasses[0].height) < 10) {
+          newErrors.glassHeight = 'Высота должна быть не менее 10 мм';
+        }
+        if (!glasses[0].width || parseFloat(glasses[0].width) < 10) {
+          newErrors.glassWidth = 'Ширина должна быть не менее 10 мм';
+        }
         if (!doorWidth || parseFloat(doorWidth) < 10) {
           newErrors.doorWidth = 'Ширина двери должна быть не менее 10 мм';
         }
       }
     }
 
-    // Дополнительные проверки для угловой раздвижной
+    // Проверки для угловой раздвижной
     if (configuration === 'corner') {
       if (!cornerLength || parseFloat(cornerLength) < 10) {
         newErrors.cornerLength = 'Длина должна быть не менее 10 мм';
       }
       if (!cornerWidth || parseFloat(cornerWidth) < 10) {
         newErrors.cornerWidth = 'Ширина должна быть не менее 10 мм';
+      }
+      if (!glasses[0].height || parseFloat(glasses[0].height) < 10) {
+        newErrors.glassHeight = 'Высота должна быть не менее 10 мм';
       }
     }
     
@@ -878,17 +887,17 @@ const Calculator: React.FC = () => {
     }
     
     setErrors(newErrors);
+    console.log('Validation errors:', newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
     if (!validateForm()) {
-      // Показываем сообщение об ошибке
+      console.log('Validation failed:', errors);
       setShowSuccessMessage(false);
       return;
     }
 
-    // Проверка на дублирование имени
     const savedConfigs = JSON.parse(localStorage.getItem('savedConfigs') || '[]');
     const isDuplicate = savedConfigs.some((config: SavedConfiguration) => 
       config.customerName.toLowerCase() === customerName.toLowerCase() && 
@@ -927,8 +936,13 @@ const Calculator: React.FC = () => {
       additionalRail,
       doorWidth,
       glassType,
-      profileType
+      profileType,
+      cornerLength: configuration === 'corner' ? cornerLength : '',
+      cornerWidth: configuration === 'corner' ? cornerWidth : '',
+      glasses: configuration === 'unique' ? glasses : [glasses[0]]
     };
+
+    console.log('Saving configuration:', newConfig);
 
     const existingIndex = savedConfigs.findIndex((config: SavedConfiguration) => config.id === newConfig.id);
 
@@ -938,12 +952,51 @@ const Calculator: React.FC = () => {
       savedConfigs.push(newConfig);
     }
 
-    localStorage.setItem('savedConfigs', JSON.stringify(savedConfigs));
-    setSavedConfigs(savedConfigs);
-    setEditingId(null);
-    setPriceChanged(false);
-    setChangedDetails({});
-    setShowSuccessMessage(true);
+    try {
+      localStorage.setItem('savedConfigs', JSON.stringify(savedConfigs));
+      console.log('Successfully saved to localStorage');
+      setSavedConfigs(savedConfigs);
+      setEditingId(null);
+      setPriceChanged(false);
+      setChangedDetails({});
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+    
+    // Очищаем все поля после успешного сохранения
+    setCustomerName('');
+    setConfiguration('');
+    setGlasses([{
+      id: '1',
+      color: GLASS_TYPES.CLEAR,
+      thickness: GLASS_THICKNESS.EIGHT.toString(),
+      height: '',
+      width: '',
+      name: 'Стекло 1'
+    }]);
+    setHardwareColor('');
+    setProfileCount(1);
+    setComment('');
+    setErrors({});
+    setCalculationDetails([]);
+    setTotalPrice(0);
+    setOriginalPrice(0);
+    setStatus('Рассчет');
+    setOriginalStatus('Рассчет');
+    setGlassType('stationary');
+    setProfileType('');
+    setIsOpeningSize(true);
+    setOpeningLength('');
+    setOpeningHeight('');
+    setAdditionalRail(false);
+    setDoorWidth('');
+    setCornerLength('');
+    setCornerWidth('');
+    setAdditionalHardware({ customItems: [] });
+    setDelivery(true);
+    setInstallation(true);
+    localStorage.removeItem('calculatorState');
   };
 
   const handleEdit = (config: SavedConfiguration) => {
@@ -977,6 +1030,11 @@ const Calculator: React.FC = () => {
     setGlassType(config.glassType || 'stationary');
     setProfileType(config.profileType || '');
     setAdditionalHardware(config.additionalHardware || { customItems: [] });
+    
+    if (config.configuration === 'corner') {
+      setCornerLength(config.cornerLength || '');
+      setCornerWidth(config.cornerWidth || '');
+    }
   };
 
   const handleDelete = (id: string) => {
