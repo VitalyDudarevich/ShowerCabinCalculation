@@ -54,6 +54,8 @@ interface PriceConfig {
   hinge90: number;
   hinge180: number;
   hinge135: number;
+  uniquePrice: number;
+  installationUnique: number;
 }
 
 const AdminPanel: React.FC = () => {
@@ -104,7 +106,9 @@ const AdminPanel: React.FC = () => {
       showUsdPrice: true,
       hinge90: 0,
       hinge180: 0,
-      hinge135: 0
+      hinge135: 0,
+      uniquePrice: 0,
+      installationUnique: 0
     };
   });
   const [saved, setSaved] = useState(false);
@@ -197,32 +201,52 @@ const AdminPanel: React.FC = () => {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  label={`Стекляшка (${prices.currency})`}
-                  value={prices.glassPrice || ''}
+                  label="Базовая стоимость стекляшки"
+                  type="number"
+                  value={prices.glassPrice}
                   onChange={(e) => handlePriceChange('glassPrice', e.target.value)}
                   fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
+                  margin="normal"
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label={`Прямая раздвижная (${prices.currency})`}
-                  value={prices.straightPrice || ''}
+                  label="Базовая стоимость прямой раздвижной"
+                  type="number"
+                  value={prices.straightPrice}
                   onChange={(e) => handlePriceChange('straightPrice', e.target.value)}
                   fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
+                  margin="normal"
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label={`Угловая раздвижная (${prices.currency})`}
-                  value={prices.cornerPrice || ''}
+                  label="Базовая стоимость угловой раздвижной"
+                  type="number"
+                  value={prices.cornerPrice}
                   onChange={(e) => handlePriceChange('cornerPrice', e.target.value)}
                   fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Базовая стоимость уникальной конфигурации"
+                  type="number"
+                  value={prices.uniquePrice}
+                  onChange={(e) => handlePriceChange('uniquePrice', e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Дополнительная направляющая"
+                  type="number"
+                  value={prices.additionalRail}
+                  onChange={(e) => handlePriceChange('additionalRail', e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
                 />
               </Grid>
             </Grid>
@@ -427,16 +451,6 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label={`Дополнительная направляющая (фиксатор) (${prices.currency})`}
-                  value={prices.additionalRail || ''}
-                  onChange={(e) => handlePriceChange('additionalRail', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
                   label={`Профильная труба (рельса) (${prices.currency})`}
                   value={prices.profileTube || ''}
                   onChange={(e) => handlePriceChange('profileTube', e.target.value)}
@@ -600,6 +614,16 @@ const AdminPanel: React.FC = () => {
                   label={`Установка Раздвижная угловая (${prices.currency})`}
                   value={prices.installationCorner || ''}
                   onChange={(e) => handlePriceChange('installationCorner', e.target.value)}
+                  fullWidth
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label={`Установка Уникальной конфигурации (${prices.currency})`}
+                  value={prices.installationUnique || ''}
+                  onChange={(e) => handlePriceChange('installationUnique', e.target.value)}
                   fullWidth
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}

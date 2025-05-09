@@ -62,6 +62,7 @@ interface PriceConfig {
   glassPrice: number;
   straightPrice: number;
   cornerPrice: number;
+  uniquePrice: number;
   additionalRail: number;
   profileTube: number;
   glassUltraClear8mm: number;
@@ -75,6 +76,7 @@ interface PriceConfig {
   currency: string;
   usdRate: number;
   showUsdPrice: boolean;
+  installationUnique: number;
 }
 
 type ProjectStatus = 'Рассчет' | 'Согласован' | 'Заказан' | 'Стекло доставлено' | 'Установка' | 'Установлено' | 'Оплачено';
@@ -223,6 +225,7 @@ const Calculator: React.FC = () => {
     glassPrice: 0,
     straightPrice: 0,
     cornerPrice: 0,
+    uniquePrice: 0,
     additionalRail: 0,
     profileTube: 0,
     glassUltraClear8mm: 0,
@@ -236,6 +239,7 @@ const Calculator: React.FC = () => {
     currency: 'BYN',
     usdRate: 1,
     showUsdPrice: false,
+    installationUnique: 0,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [originalPrice, setOriginalPrice] = useState<number>(0);
@@ -610,6 +614,15 @@ const Calculator: React.FC = () => {
           });
         }
       }
+
+      total += prices.uniquePrice;
+      details.push(`Базовая стоимость: ${prices.uniquePrice} ₾`);
+      
+      // Добавляем стоимость монтажа
+      if (installation) {
+        total += prices.installationUnique;
+        details.push(`Установка: ${prices.installationUnique} ₾`);
+      }
     } else if (configuration === 'glass') {
       // Расчет для стекляшки
       if (glasses[0].height && glasses[0].width) {
@@ -681,122 +694,27 @@ const Calculator: React.FC = () => {
       if (isOpeningSize) {
         if (openingLength && openingHeight) {
           const glassArea = (parseFloat(openingLength) * parseFloat(openingHeight)) / 1000000;
+          const glassTypeText = GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
           total += prices.straightPrice * glassArea;
-          details.push(`Прямая раздвижная (${glassArea.toFixed(2)} м²): ${Math.ceil(prices.straightPrice * glassArea)} ₾`);
+          details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${Math.ceil(prices.straightPrice * glassArea)} ₾`);
         }
       } else {
         if (glasses[0].height && glasses[0].width && doorWidth) {
           const stationaryArea = (parseFloat(glasses[0].height) * parseFloat(glasses[0].width)) / 1000000;
           const doorArea = (parseFloat(glasses[0].height) * parseFloat(doorWidth)) / 1000000;
           const totalArea = stationaryArea + doorArea;
+          const glassTypeText = GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
           total += prices.straightPrice * totalArea;
-          details.push(`Прямая раздвижная (${totalArea.toFixed(2)} м²): ${Math.ceil(prices.straightPrice * totalArea)} ₾`);
-        }
-      }
-
-      // Добавляем стоимость фурнитуры
-      if (hardwareColor) {
-        let profilePrice = 0;
-        let hardwareType = '';
-        
-        if (hardwareColor === 'chrome') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileChrome8mm;
-            hardwareType = 'хром (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileChrome8mm;
-            hardwareType = 'хром (10 мм)';
-          }
-        } else if (hardwareColor === 'black') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileBlack;
-            hardwareType = 'черный (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileBlack;
-            hardwareType = 'черный (10 мм)';
-          }
-        } else if (hardwareColor === 'matte') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileMatte10mm;
-            hardwareType = 'матовый (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileMatte10mm;
-            hardwareType = 'матовый (10 мм)';
-          }
-        } else if (hardwareColor === 'gold') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileGold;
-            hardwareType = 'золотой (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileGold;
-            hardwareType = 'золотой (10 мм)';
-          }
-        }
-
-        const profileCost = profilePrice * profileCount;
-        total += profileCost;
-        details.push(`Фурнитура ${hardwareType} (${profileCount} шт.): ${Math.ceil(profileCost)} ₾`);
-
-        if (additionalRail) {
-          total += prices.additionalRail;
-          details.push(`Дополнительная направляющая: ${prices.additionalRail} ₾`);
+          details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${totalArea.toFixed(2)} м²): ${Math.ceil(prices.straightPrice * totalArea)} ₾`);
         }
       }
     } else if (configuration === 'corner') {
       // Расчет для угловой раздвижной
       if (cornerLength && cornerWidth && glasses[0].height) {
         const glassArea = (parseFloat(cornerLength) * parseFloat(cornerWidth)) / 1000000;
+        const glassTypeText = GLASS_TYPE_TEXT[glasses[0].color as keyof typeof GLASS_TYPE_TEXT] || 'тонированное';
         total += prices.cornerPrice * glassArea;
-        details.push(`Угловая раздвижная (${glassArea.toFixed(2)} м²): ${Math.ceil(prices.cornerPrice * glassArea)} ₾`);
-      }
-
-      // Добавляем стоимость фурнитуры
-      if (hardwareColor) {
-        let profilePrice = 0;
-        let hardwareType = '';
-        
-        if (hardwareColor === 'chrome') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileChrome8mm;
-            hardwareType = 'хром (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileChrome8mm;
-            hardwareType = 'хром (10 мм)';
-          }
-        } else if (hardwareColor === 'black') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileBlack;
-            hardwareType = 'черный (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileBlack;
-            hardwareType = 'черный (10 мм)';
-          }
-        } else if (hardwareColor === 'matte') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileMatte10mm;
-            hardwareType = 'матовый (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileMatte10mm;
-            hardwareType = 'матовый (10 мм)';
-          }
-        } else if (hardwareColor === 'gold') {
-          if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-            profilePrice = prices.profileGold;
-            hardwareType = 'золотой (8 мм)';
-          } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-            profilePrice = prices.profileGold;
-            hardwareType = 'золотой (10 мм)';
-          }
-        }
-
-        const profileCost = profilePrice * profileCount;
-        total += profileCost;
-        details.push(`Фурнитура ${hardwareType} (${profileCount} шт.): ${Math.ceil(profileCost)} ₾`);
-
-        if (additionalRail) {
-          total += prices.additionalRail;
-          details.push(`Дополнительная направляющая: ${prices.additionalRail} ₾`);
-        }
+        details.push(`Стекло ${glassTypeText} ${glasses[0].thickness} мм (${glassArea.toFixed(2)} м²): ${Math.ceil(prices.cornerPrice * glassArea)} ₾`);
       }
     }
 
@@ -818,6 +736,21 @@ const Calculator: React.FC = () => {
         total += prices.installationCorner;
         details.push(`Монтаж угловой раздвижной: ${prices.installationCorner} ₾`);
       }
+    }
+
+    // Добавляем базовую стоимость в конец
+    if (configuration === 'glass') {
+      total += prices.glassPrice;
+      details.push(`Базовая стоимость: ${prices.glassPrice} ₾`);
+    } else if (configuration === 'straight') {
+      total += prices.straightPrice;
+      details.push(`Базовая стоимость: ${prices.straightPrice} ₾`);
+    } else if (configuration === 'corner') {
+      total += prices.cornerPrice;
+      details.push(`Базовая стоимость: ${prices.cornerPrice} ₾`);
+    } else if (configuration === 'unique') {
+      total += prices.uniquePrice;
+      details.push(`Базовая стоимость: ${prices.uniquePrice} ₾`);
     }
 
     setCalculationDetails(details);
