@@ -614,15 +614,6 @@ const Calculator: React.FC = () => {
           });
         }
       }
-
-      total += prices.uniquePrice;
-      details.push(`Базовая стоимость: ${prices.uniquePrice} ₾`);
-      
-      // Добавляем стоимость монтажа
-      if (installation) {
-        total += prices.installationUnique;
-        details.push(`Установка: ${prices.installationUnique} ₾`);
-      }
     } else if (configuration === 'glass') {
       // Расчет для стекляшки
       if (glasses[0].height && glasses[0].width) {
@@ -735,6 +726,9 @@ const Calculator: React.FC = () => {
       } else if (configuration === 'corner') {
         total += prices.installationCorner;
         details.push(`Монтаж угловой раздвижной: ${prices.installationCorner} ₾`);
+      } else if (configuration === 'unique') {
+        total += prices.installationUnique;
+        details.push(`Установка: ${prices.installationUnique} ₾`);
       }
     }
 
