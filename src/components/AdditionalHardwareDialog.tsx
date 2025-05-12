@@ -32,6 +32,23 @@ interface AdditionalHardwareDialogProps {
   existingItems?: CustomHardwareItem[];
 }
 
+export const HARDWARE_ITEMS = [
+  'Петля 90°',
+  'Петля 135°',
+  'Петля 180°',
+  'Крепление стекло-стекло',
+  'Палка стена-стекло',
+  'Крепление труба-стекло',
+  'Уголок труба-труба',
+  'Профиль',
+  'Раздвижная система',
+  'Профильная труба (рельса)',
+  'Ручка кноб',
+  'Ручка скоба маленькая',
+  'Ручка скоба большая',
+  'Дополнительная направляющая'
+] as const;
+
 export const AdditionalHardwareDialog: React.FC<AdditionalHardwareDialogProps> = ({
   open,
   onClose,
@@ -54,31 +71,46 @@ export const AdditionalHardwareDialog: React.FC<AdditionalHardwareDialogProps> =
     const items = [];
     
     if (prices.hinge90 > 0) {
-      items.push('Петля 90 градусов');
-    }
-    if (prices.hinge180 > 0) {
-      items.push('Петля 180 градусов');
+      items.push('Петля 90°');
     }
     if (prices.hinge135 > 0) {
-      items.push('Петля 135 градусов');
+      items.push('Петля 135°');
+    }
+    if (prices.hinge180 > 0) {
+      items.push('Петля 180°');
+    }
+    if (prices.mountingGlass > 0) {
+      items.push('Крепление стекло-стекло');
+    }
+    if (prices.mountingWall > 0) {
+      items.push('Палка стена-стекло');
+    }
+    if (prices.mountingPipe > 0) {
+      items.push('Крепление труба-стекло');
+    }
+    if (prices.mountingPipePipe > 0) {
+      items.push('Уголок труба-труба');
+    }
+    if (prices.profile8mm > 0) {
+      items.push('Профиль');
+    }
+    if (prices.slidingSystem > 0) {
+      items.push('Раздвижная система');
+    }
+    if (prices.profileTube > 0) {
+      items.push('Профильная труба (рельса)');
     }
     if (prices.handleKnob > 0) {
-      items.push('Ручка');
+      items.push('Ручка кноб');
     }
-    if (prices.mountingWallGlass > 0) {
-      items.push('Крепление палка стена-стекло');
+    if (prices.handleBracketSmall > 0) {
+      items.push('Ручка скоба маленькая');
     }
-    if (prices.mountingWallGlassGlass > 0) {
-      items.push('Крепление палка стена-стекло-стекло');
-    }
-    if (prices.slidingChrome > 0 || prices.slidingMatte > 0 || prices.slidingBlack > 0 || prices.slidingGold > 0) {
-      items.push('Раздвижная система');
+    if (prices.handleBracketLarge > 0) {
+      items.push('Ручка скоба большая');
     }
     if (prices.additionalRail > 0) {
       items.push('Дополнительная направляющая');
-    }
-    if (prices.profileTube > 0) {
-      items.push('Дополнительный профиль');
     }
     
     return items;
@@ -86,35 +118,34 @@ export const AdditionalHardwareDialog: React.FC<AdditionalHardwareDialogProps> =
 
   const getItemPrice = (itemName: string): number => {
     switch (itemName) {
-      case 'Петля 90 градусов':
+      case 'Петля 90°':
         return prices.hinge90;
-      case 'Петля 180 градусов':
-        return prices.hinge180;
-      case 'Петля 135 градусов':
+      case 'Петля 135°':
         return prices.hinge135;
-      case 'Ручка':
-        return prices.handleKnob;
-      case 'Крепление палка стена-стекло':
-        return prices.mountingWallGlass;
-      case 'Крепление палка стена-стекло-стекло':
-        return prices.mountingWallGlassGlass;
+      case 'Петля 180°':
+        return prices.hinge180;
+      case 'Крепление стекло-стекло':
+        return prices.mountingGlass;
+      case 'Палка стена-стекло':
+        return prices.mountingWall;
+      case 'Крепление труба-стекло':
+        return prices.mountingPipe;
+      case 'Уголок труба-труба':
+        return prices.mountingPipePipe;
+      case 'Профиль':
+        return prices.profile8mm;
       case 'Раздвижная система':
-        switch (hardwareColor) {
-          case 'chrome':
-            return prices.slidingChrome;
-          case 'matte':
-            return prices.slidingMatte;
-          case 'black':
-            return prices.slidingBlack;
-          case 'gold':
-            return prices.slidingGold;
-          default:
-            return 0;
-        }
+        return prices.slidingSystem;
+      case 'Профильная труба (рельса)':
+        return prices.profileTube;
+      case 'Ручка кноб':
+        return prices.handleKnob;
+      case 'Ручка скоба маленькая':
+        return prices.handleBracketSmall;
+      case 'Ручка скоба большая':
+        return prices.handleBracketLarge;
       case 'Дополнительная направляющая':
         return prices.additionalRail;
-      case 'Дополнительный профиль':
-        return prices.profileTube;
       default:
         return 0;
     }

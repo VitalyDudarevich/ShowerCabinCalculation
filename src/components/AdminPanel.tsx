@@ -30,10 +30,7 @@ interface PriceConfig {
   profile10mm: number;
   mountingWallGlass: number;
   mountingWallGlassGlass: number;
-  slidingChrome: number;
-  slidingMatte: number;
-  slidingBlack: number;
-  slidingGold: number;
+  slidingSystem: number;
   handleKnob: number;
   handleBracketSmall: number;
   handleBracketLarge: number;
@@ -54,6 +51,10 @@ interface PriceConfig {
   hinge135: number;
   uniquePrice: number;
   installationUnique: number;
+  mountingGlass: number;
+  mountingWall: number;
+  mountingPipe: number;
+  mountingPipePipe: number;
 }
 
 const AdminPanel: React.FC = () => {
@@ -64,7 +65,8 @@ const AdminPanel: React.FC = () => {
       return {
         ...parsedPrices,
         currency: parsedPrices.currency || 'BYN',
-        showUsdPrice: parsedPrices.showUsdPrice ?? true
+        showUsdPrice: parsedPrices.showUsdPrice ?? true,
+        slidingSystem: parsedPrices.slidingSystem || 0
       };
     }
     return {
@@ -76,10 +78,7 @@ const AdminPanel: React.FC = () => {
       profile10mm: 0,
       mountingWallGlass: 0,
       mountingWallGlassGlass: 0,
-      slidingChrome: 0,
-      slidingMatte: 0,
-      slidingBlack: 0,
-      slidingGold: 0,
+      slidingSystem: 0,
       handleKnob: 0,
       handleBracketSmall: 0,
       handleBracketLarge: 0,
@@ -104,7 +103,11 @@ const AdminPanel: React.FC = () => {
       hinge180: 0,
       hinge135: 0,
       uniquePrice: 0,
-      installationUnique: 0
+      installationUnique: 0,
+      mountingGlass: 0,
+      mountingWall: 0,
+      mountingPipe: 0,
+      mountingPipePipe: 0
     };
   });
   const [saved, setSaved] = useState(false);
@@ -382,74 +385,14 @@ const AdminPanel: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Раздвижные системы
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Раздвижная система Хром (${prices.currency})`}
-                  value={prices.slidingChrome || ''}
-                  onChange={(e) => handlePriceChange('slidingChrome', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Раздвижная система Матовый (${prices.currency})`}
-                  value={prices.slidingMatte || ''}
-                  onChange={(e) => handlePriceChange('slidingMatte', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Раздвижная система Черный (${prices.currency})`}
-                  value={prices.slidingBlack || ''}
-                  onChange={(e) => handlePriceChange('slidingBlack', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Раздвижная система Золотой (${prices.currency})`}
-                  value={prices.slidingGold || ''}
-                  onChange={(e) => handlePriceChange('slidingGold', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Профильная труба (рельса) (${prices.currency})`}
-                  value={prices.profileTube || ''}
-                  onChange={(e) => handlePriceChange('profileTube', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
               Крепления
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  label={`Крепление палка стена-стекло (${prices.currency})`}
-                  value={prices.mountingWallGlass || ''}
-                  onChange={(e) => handlePriceChange('mountingWallGlass', e.target.value)}
+                  label={`Крепление стекло-стекло (${prices.currency})`}
+                  value={prices.mountingGlass || ''}
+                  onChange={(e) => handlePriceChange('mountingGlass', e.target.value)}
                   fullWidth
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}
@@ -457,9 +400,29 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label={`Крепление палка стена-стекло-стекло (${prices.currency})`}
-                  value={prices.mountingWallGlassGlass || ''}
-                  onChange={(e) => handlePriceChange('mountingWallGlassGlass', e.target.value)}
+                  label={`Палка стена-стекло (${prices.currency})`}
+                  value={prices.mountingWall || ''}
+                  onChange={(e) => handlePriceChange('mountingWall', e.target.value)}
+                  fullWidth
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label={`Крепление труба-стекло (${prices.currency})`}
+                  value={prices.mountingPipe || ''}
+                  onChange={(e) => handlePriceChange('mountingPipe', e.target.value)}
+                  fullWidth
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label={`Уголок труба-труба (${prices.currency})`}
+                  value={prices.mountingPipePipe || ''}
+                  onChange={(e) => handlePriceChange('mountingPipePipe', e.target.value)}
                   fullWidth
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}
@@ -600,6 +563,36 @@ const AdminPanel: React.FC = () => {
                   label={`Установка Уникальной конфигурации (${prices.currency})`}
                   value={prices.installationUnique || ''}
                   onChange={(e) => handlePriceChange('installationUnique', e.target.value)}
+                  fullWidth
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Раздвижная система
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label={`Раздвижная система (${prices.currency})`}
+                  value={prices.slidingSystem || ''}
+                  onChange={(e) => handlePriceChange('slidingSystem', e.target.value)}
+                  fullWidth
+                  type="text"
+                  inputProps={{ inputMode: 'decimal' }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label={`Профильная труба (рельса) (${prices.currency})`}
+                  value={prices.profileTube || ''}
+                  onChange={(e) => handlePriceChange('profileTube', e.target.value)}
                   fullWidth
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}

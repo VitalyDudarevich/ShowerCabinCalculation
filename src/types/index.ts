@@ -109,4 +109,6 @@ export interface PriceConfig {
   mountingWallGlassGlass: number;
   profile8mm: number;
   profile10mm: number;
+  mountingPipe: number;
+  mountingPipePipe: number;
 } 

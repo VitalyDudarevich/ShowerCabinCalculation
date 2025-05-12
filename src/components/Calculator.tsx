@@ -48,10 +48,7 @@ interface PriceConfig {
   profileGold: number;
   mountingWallGlass: number;
   mountingWallGlassGlass: number;
-  slidingChrome: number;
-  slidingMatte: number;
-  slidingBlack: number;
-  slidingGold: number;
+  slidingSystem: number;
   handleKnob: number;
   handleBracketSmall: number;
   handleBracketLarge: number;
@@ -217,10 +214,7 @@ const Calculator: React.FC = () => {
     profileGold: 0,
     mountingWallGlass: 0,
     mountingWallGlassGlass: 0,
-    slidingChrome: 0,
-    slidingMatte: 0,
-    slidingBlack: 0,
-    slidingGold: 0,
+    slidingSystem: 0,
     handleKnob: 0,
     handleBracketSmall: 0,
     handleBracketLarge: 0,
@@ -503,6 +497,13 @@ const Calculator: React.FC = () => {
     let total = 0;
     const details: string[] = [];
 
+    // Проверяем, выбран ли цвет фурнитуры
+    if (!hardwareColor) {
+      setCalculationDetails(['Пожалуйста, выберите цвет фурнитуры для расчета стоимости']);
+      setTotalPrice(0);
+      return;
+    }
+
     // Если конфигурация не выбрана, не производим расчет
     if (!configuration) {
       setCalculationDetails(details);
@@ -708,15 +709,7 @@ const Calculator: React.FC = () => {
       } else if (item.name.includes('Крепление палка стена-стекло-стекло')) {
         itemPrice = prices.mountingWallGlassGlass * item.count;
       } else if (item.name.includes('Раздвижная система')) {
-        if (hardwareColor === 'chrome') {
-          itemPrice = prices.slidingChrome * item.count;
-        } else if (hardwareColor === 'matte') {
-          itemPrice = prices.slidingMatte * item.count;
-        } else if (hardwareColor === 'black') {
-          itemPrice = prices.slidingBlack * item.count;
-        } else if (hardwareColor === 'gold') {
-          itemPrice = prices.slidingGold * item.count;
-        }
+        itemPrice = prices.slidingSystem * item.count;
       } else if (item.name.includes('Дополнительная направляющая')) {
         itemPrice = prices.additionalRail * item.count;
       } else if (item.name.includes('Дополнительный профиль')) {
@@ -1086,7 +1079,7 @@ const Calculator: React.FC = () => {
       setProfileCount(0);
       setComment('');
     } else if (newConfig === 'glass') {
-      // Добавляем профиль и крепление по умолчанию для стекляшки
+      // Добавляем дефолтную фурнитуру для стекляшки
       const newItems: CustomHardwareItem[] = [
         {
           id: Date.now().toString(),
@@ -1095,7 +1088,56 @@ const Calculator: React.FC = () => {
         },
         {
           id: (Date.now() + 1).toString(),
-          name: 'Крепление палка стена-стекло',
+          name: 'Палка стена-стекло',
+          count: 1
+        }
+      ];
+      setAdditionalHardware({
+        customItems: newItems
+      });
+    } else if (newConfig === 'straight') {
+      // Добавляем дефолтную фурнитуру для прямой раздвижной
+      const newItems: CustomHardwareItem[] = [
+        {
+          id: Date.now().toString(),
+          name: 'Профиль',
+          count: 1
+        },
+        {
+          id: (Date.now() + 1).toString(),
+          name: 'Раздвижная система',
+          count: 1
+        },
+        {
+          id: (Date.now() + 2).toString(),
+          name: 'Профильная труба (рельса)',
+          count: 1
+        }
+      ];
+      setAdditionalHardware({
+        customItems: newItems
+      });
+    } else if (newConfig === 'corner') {
+      // Добавляем дефолтную фурнитуру для угловой раздвижной
+      const newItems: CustomHardwareItem[] = [
+        {
+          id: Date.now().toString(),
+          name: 'Профиль',
+          count: 2
+        },
+        {
+          id: (Date.now() + 1).toString(),
+          name: 'Раздвижная система',
+          count: 2
+        },
+        {
+          id: (Date.now() + 2).toString(),
+          name: 'Уголок труба-труба',
+          count: 1
+        },
+        {
+          id: (Date.now() + 3).toString(),
+          name: 'Профильная труба (рельса)',
           count: 1
         }
       ];
@@ -1160,7 +1202,7 @@ const Calculator: React.FC = () => {
     setInstallation(currentState.installation);
     setTotalPrice(currentState.totalPrice);
     setCalculationDetails(currentState.calculationDetails);
-    setEditingId(currentState.editingId);
+    setEditingId(currentState.editingId || null);
     setPriceChanged(currentState.priceChanged);
     setChangedDetails(currentState.changedDetails);
     setOriginalPrice(currentState.originalPrice);
@@ -1208,7 +1250,7 @@ const Calculator: React.FC = () => {
     setProfileCount(0);
     setComment('');
     setErrors({});
-    setEditingId(null);
+    editingId(null);
     setPriceChanged(false);
     setChangedDetails({});
     setCalculationDetails([]);
@@ -1360,7 +1402,7 @@ const Calculator: React.FC = () => {
     if (prices.mountingWallGlassGlass > 0) {
       items.push('Крепление палка стена-стекло-стекло');
     }
-    if (prices.slidingChrome > 0 || prices.slidingMatte > 0 || prices.slidingBlack > 0 || prices.slidingGold > 0) {
+    if (prices.slidingSystem > 0) {
       items.push('Раздвижная система');
     }
     if (prices.additionalRail > 0) {
@@ -1371,6 +1413,31 @@ const Calculator: React.FC = () => {
     }
     
     return items;
+  };
+
+  const getItemPrice = (itemName: string): number => {
+    switch (itemName) {
+      case 'Петля 90 градусов':
+        return prices.hinge90;
+      case 'Петля 180 градусов':
+        return prices.hinge180;
+      case 'Петля 135 градусов':
+        return prices.hinge135;
+      case 'Ручка':
+        return prices.handleKnob;
+      case 'Крепление палка стена-стекло':
+        return prices.mountingWallGlass;
+      case 'Крепление палка стена-стекло-стекло':
+        return prices.mountingWallGlassGlass;
+      case 'Раздвижная система':
+        return prices.slidingSystem;
+      case 'Дополнительная направляющая':
+        return prices.additionalRail;
+      case 'Дополнительный профиль':
+        return prices.profileTube;
+      default:
+        return 0;
+    }
   };
 
   const handleDeleteClick = (id: string) => {
@@ -1432,6 +1499,63 @@ const Calculator: React.FC = () => {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  const calculateTotal = () => {
+    let total = 0;
+    let totalUsd = 0;
+
+    // Расчет стоимости стекла
+    const glassArea = width * height;
+    const glassPrice = getGlassPrice();
+    total += glassArea * glassPrice;
+
+    // Расчет стоимости профиля
+    const profileLength = (width + height) * 2;
+    const profilePrice = getProfilePrice();
+    total += profileLength * profilePrice;
+
+    // Расчет стоимости фурнитуры
+    hardwareItems.forEach(item => {
+      let itemPrice = 0;
+      if (item.name.includes('Петля')) {
+        itemPrice = getItemPrice(item.name) * item.count;
+      } else if (item.name.includes('Ручка')) {
+        itemPrice = getItemPrice(item.name) * item.count;
+      } else if (item.name.includes('Крепление')) {
+        itemPrice = getItemPrice(item.name) * item.count;
+      } else if (item.name.includes('Раздвижная система')) {
+        itemPrice = getItemPrice(item.name) * item.count;
+      } else if (item.name.includes('Дополнительная направляющая')) {
+        itemPrice = getItemPrice(item.name) * item.count;
+      } else if (item.name.includes('Дополнительный профиль')) {
+        itemPrice = getItemPrice(item.name) * item.count;
+      }
+      total += itemPrice;
+    });
+
+    // Расчет стоимости установки
+    if (installationType === 'glass') {
+      total += prices.installationGlass;
+    } else if (installationType === 'straight') {
+      total += prices.installationStraight;
+    } else if (installationType === 'corner') {
+      total += prices.installationCorner;
+    } else if (installationType === 'unique') {
+      total += prices.installationUnique;
+    }
+
+    // Добавление стоимости доставки
+    if (delivery) {
+      total += prices.delivery;
+    }
+
+    // Расчет в USD
+    if (prices.showUsdPrice && prices.usdRate > 0) {
+      totalUsd = total / prices.usdRate;
+    }
+
+    return { total, totalUsd };
   };
 
   return (
@@ -1690,6 +1814,11 @@ const Calculator: React.FC = () => {
                           <MenuItem value="gold">Золотой</MenuItem>
                         </Select>
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
+                        {!hardwareColor && !errors.hardwareColor && (
+                          <FormHelperText sx={{ color: 'warning.main' }}>
+                            Выберите цвет фурнитуры для расчета стоимости
+                          </FormHelperText>
+                        )}
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
@@ -1921,6 +2050,11 @@ const Calculator: React.FC = () => {
                           <MenuItem value="gold">Золотой</MenuItem>
                         </Select>
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
+                        {!hardwareColor && !errors.hardwareColor && (
+                          <FormHelperText sx={{ color: 'warning.main' }}>
+                            Выберите цвет фурнитуры для расчета стоимости
+                          </FormHelperText>
+                        )}
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
@@ -2096,6 +2230,11 @@ const Calculator: React.FC = () => {
                           <MenuItem value="gold">Золотой</MenuItem>
                         </Select>
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
+                        {!hardwareColor && !errors.hardwareColor && (
+                          <FormHelperText sx={{ color: 'warning.main' }}>
+                            Выберите цвет фурнитуры для расчета стоимости
+                          </FormHelperText>
+                        )}
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
@@ -2289,6 +2428,11 @@ const Calculator: React.FC = () => {
                           <MenuItem value="gold">Золотой</MenuItem>
                         </Select>
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
+                        {!hardwareColor && !errors.hardwareColor && (
+                          <FormHelperText sx={{ color: 'warning.main' }}>
+                            Выберите цвет фурнитуры для расчета стоимости
+                          </FormHelperText>
+                        )}
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
