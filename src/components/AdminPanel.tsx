@@ -26,10 +26,8 @@ interface PriceConfig {
   glassMatteFactory10mm: number;
   glassTinted8mm: number;
   glassTinted10mm: number;
-  profileChrome8mm: number;
-  profileMatte10mm: number;
-  profileBlack: number;
-  profileGold: number;
+  profile8mm: number;
+  profile10mm: number;
   mountingWallGlass: number;
   mountingWallGlassGlass: number;
   slidingChrome: number;
@@ -74,10 +72,8 @@ const AdminPanel: React.FC = () => {
       glassClear10mm: 0,
       glassTinted8mm: 0,
       glassTinted10mm: 0,
-      profileChrome8mm: 0,
-      profileMatte10mm: 0,
-      profileBlack: 0,
-      profileGold: 0,
+      profile8mm: 0,
+      profile10mm: 0,
       mountingWallGlass: 0,
       mountingWallGlassGlass: 0,
       slidingChrome: 0,
@@ -361,9 +357,9 @@ const AdminPanel: React.FC = () => {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  label={`Профиль Хром (${prices.currency})`}
-                  value={prices.profileChrome8mm || ''}
-                  onChange={(e) => handlePriceChange('profileChrome8mm', e.target.value)}
+                  label={`Профиль 8 мм (${prices.currency})`}
+                  value={prices.profile8mm || ''}
+                  onChange={(e) => handlePriceChange('profile8mm', e.target.value)}
                   fullWidth
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}
@@ -371,29 +367,9 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label={`Профиль Матовый (${prices.currency})`}
-                  value={prices.profileMatte10mm || ''}
-                  onChange={(e) => handlePriceChange('profileMatte10mm', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Профиль Черный (${prices.currency})`}
-                  value={prices.profileBlack || ''}
-                  onChange={(e) => handlePriceChange('profileBlack', e.target.value)}
-                  fullWidth
-                  type="text"
-                  inputProps={{ inputMode: 'decimal' }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={`Профиль Золотой (${prices.currency})`}
-                  value={prices.profileGold || ''}
-                  onChange={(e) => handlePriceChange('profileGold', e.target.value)}
+                  label={`Профиль 10 мм (${prices.currency})`}
+                  value={prices.profile10mm || ''}
+                  onChange={(e) => handlePriceChange('profile10mm', e.target.value)}
                   fullWidth
                   type="text"
                   inputProps={{ inputMode: 'decimal' }}

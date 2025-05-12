@@ -77,6 +77,8 @@ interface PriceConfig {
   usdRate: number;
   showUsdPrice: boolean;
   installationUnique: number;
+  profile8mm: number;
+  profile10mm: number;
 }
 
 type ProjectStatus = 'Рассчет' | 'Согласован' | 'Заказан' | 'Стекло доставлено' | 'Установка' | 'Установлено' | 'Оплачено';
@@ -244,6 +246,8 @@ const Calculator: React.FC = () => {
     usdRate: 1,
     showUsdPrice: false,
     installationUnique: 0,
+    profile8mm: 0,
+    profile10mm: 0,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [originalPrice, setOriginalPrice] = useState<number>(0);
@@ -634,133 +638,131 @@ const Calculator: React.FC = () => {
     }
 
     // Расчет стоимости профиля только если выбран цвет фурнитуры
-    if (hardwareColor) {
-      let profilePrice = 0;
-      let hardwareType = '';
+    if (hardwareColor && profileCount > 0) {
+      const glassThickness = parseFloat(glasses[0].thickness);
+      const profilePrice = glassThickness === 8 ? prices.profile8mm : prices.profile10mm;
+      const profileCost = profilePrice * profileCount;
+      total += profileCost;
       
-      if (hardwareColor === 'chrome') {
-        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-          profilePrice = prices.profileChrome8mm;
-          hardwareType = 'хром (8 мм)';
-        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-          profilePrice = prices.profileChrome8mm;
-          hardwareType = 'хром (10 мм)';
-        }
-      } else if (hardwareColor === 'black') {
-        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-          profilePrice = prices.profileBlack;
-          hardwareType = 'черный (8 мм)';
-        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-          profilePrice = prices.profileBlack;
-          hardwareType = 'черный (10 мм)';
-        }
-      } else if (hardwareColor === 'matte') {
-        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-          profilePrice = prices.profileMatte10mm;
-          hardwareType = 'матовый (8 мм)';
-        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-          profilePrice = prices.profileMatte10mm;
-          hardwareType = 'матовый (10 мм)';
-        }
-      } else if (hardwareColor === 'gold') {
-        if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.EIGHT) {
-          profilePrice = prices.profileGold;
-          hardwareType = 'золотой (8 мм)';
-        } else if (parseFloat(glasses[0].thickness) === GLASS_THICKNESS.TEN) {
-          profilePrice = prices.profileGold;
-          hardwareType = 'золотой (10 мм)';
-        }
+      // Определяем название цвета профиля
+      let profileColorName = '';
+      switch (hardwareColor) {
+        case 'chrome':
+          profileColorName = 'Хром';
+          break;
+        case 'matte':
+          profileColorName = 'Матовый';
+          break;
+        case 'black':
+          profileColorName = 'Черный';
+          break;
+        case 'gold':
+          profileColorName = 'Золотой';
+          break;
       }
-
-      if (profilePrice > 0 && profileCount > 0) {
-        const profileCost = profilePrice * profileCount;
-        total += profileCost;
-        details.push(`Профиль ${hardwareType} (${profileCount} шт.): ${profileCost.toFixed(2)} ₾`);
-      } else if (profileCount > 0) {
-        details.push(`Профиль ${hardwareType} (${profileCount} шт.): 0 ₾`);
-      }
-    } else if (additionalHardware.customItems.length > 0) {
-      // Если фурнитура добавлена, но цвет не выбран
-      details.push('Цвет фурнитуры не указан');
+      
+      details.push(`Профиль ${profileColorName} ${glassThickness} мм (${profileCount} шт.): ${profileCost.toFixed(2)} ${prices.currency}`);
     }
 
     // Расчет стоимости дополнительной фурнитуры
-    if (additionalHardware.customItems.length > 0 && hardwareColor) {
-      additionalHardware.customItems.forEach(item => {
-        if (item.count > 0) {
-          let itemPrice = 0;
-          
-          // Определяем цену в зависимости от типа фурнитуры
-          if (item.name.includes('Петля 90 градусов')) {
-            itemPrice = prices.hinge90 * item.count;
-          } else if (item.name.includes('Петля 180 градусов')) {
-            itemPrice = prices.hinge180 * item.count;
-          } else if (item.name.includes('Петля 135 градусов')) {
-            itemPrice = prices.hinge135 * item.count;
-          } else if (item.name.includes('Ручка')) {
-            itemPrice = prices.handleKnob * item.count;
-          } else if (item.name.includes('Крепление палка стена-стекло')) {
-            itemPrice = prices.mountingWallGlass * item.count;
-          } else if (item.name.includes('Крепление палка стена-стекло-стекло')) {
-            itemPrice = prices.mountingWallGlassGlass * item.count;
-          } else if (item.name.includes('Раздвижная система')) {
-            if (hardwareColor === 'chrome') {
-              itemPrice = prices.slidingChrome * item.count;
-            } else if (hardwareColor === 'matte') {
-              itemPrice = prices.slidingMatte * item.count;
-            } else if (hardwareColor === 'black') {
-              itemPrice = prices.slidingBlack * item.count;
-            } else if (hardwareColor === 'gold') {
-              itemPrice = prices.slidingGold * item.count;
-            }
-          } else if (item.name.includes('Дополнительная направляющая')) {
-            itemPrice = prices.additionalRail * item.count;
-          } else if (item.name.includes('Дополнительный профиль')) {
-            itemPrice = prices.profileTube * item.count;
-          }
-          
-          total += itemPrice;
-          details.push(`${item.name} (${item.count} шт.): ${itemPrice.toFixed(2)} ₾`);
+    for (const item of additionalHardware.customItems) {
+      let itemPrice = 0;
+      
+      if (item.name === 'Профиль') {
+        const glassThickness = parseFloat(glasses[0].thickness);
+        const profilePrice = glassThickness === 8 ? prices.profile8mm : prices.profile10mm;
+        itemPrice = profilePrice * item.count;
+        total += itemPrice;
+        
+        // Определяем название цвета профиля
+        let profileColorName = '';
+        switch (hardwareColor) {
+          case 'chrome':
+            profileColorName = 'Хром';
+            break;
+          case 'matte':
+            profileColorName = 'Матовый';
+            break;
+          case 'black':
+            profileColorName = 'Черный';
+            break;
+          case 'gold':
+            profileColorName = 'Золотой';
+            break;
         }
-      });
+        
+        details.push(`Профиль ${profileColorName} ${glassThickness} мм (${item.count} шт.): ${itemPrice.toFixed(2)} ${prices.currency}`);
+        continue;
+      }
+
+      if (item.name.includes('Петля 90 градусов')) {
+        itemPrice = prices.hinge90 * item.count;
+      } else if (item.name.includes('Петля 180 градусов')) {
+        itemPrice = prices.hinge180 * item.count;
+      } else if (item.name.includes('Петля 135 градусов')) {
+        itemPrice = prices.hinge135 * item.count;
+      } else if (item.name.includes('Ручка')) {
+        itemPrice = prices.handleKnob * item.count;
+      } else if (item.name.includes('Крепление палка стена-стекло')) {
+        itemPrice = prices.mountingWallGlass * item.count;
+      } else if (item.name.includes('Крепление палка стена-стекло-стекло')) {
+        itemPrice = prices.mountingWallGlassGlass * item.count;
+      } else if (item.name.includes('Раздвижная система')) {
+        if (hardwareColor === 'chrome') {
+          itemPrice = prices.slidingChrome * item.count;
+        } else if (hardwareColor === 'matte') {
+          itemPrice = prices.slidingMatte * item.count;
+        } else if (hardwareColor === 'black') {
+          itemPrice = prices.slidingBlack * item.count;
+        } else if (hardwareColor === 'gold') {
+          itemPrice = prices.slidingGold * item.count;
+        }
+      } else if (item.name.includes('Дополнительная направляющая')) {
+        itemPrice = prices.additionalRail * item.count;
+      } else if (item.name.includes('Дополнительный профиль')) {
+        itemPrice = prices.profileTube * item.count;
+      }
+      
+      total += itemPrice;
+      details.push(`${item.name} (${item.count} шт.): ${itemPrice.toFixed(2)} ${prices.currency}`);
     }
 
     // Стоимость доставки
     if (delivery) {
       total += prices.delivery;
-      details.push(`Доставка: ${prices.delivery} ₾`);
+      details.push(`Доставка: ${prices.delivery} ${prices.currency}`);
     }
 
     // Стоимость монтажа
     if (installation) {
       if (configuration === 'glass') {
         total += prices.installationGlass;
-        details.push(`Монтаж стекла: ${prices.installationGlass} ₾`);
+        details.push(`Монтаж стекла: ${prices.installationGlass} ${prices.currency}`);
       } else if (configuration === 'straight') {
         total += prices.installationStraight;
-        details.push(`Монтаж прямой раздвижной: ${prices.installationStraight} ₾`);
+        details.push(`Монтаж прямой раздвижной: ${prices.installationStraight} ${prices.currency}`);
       } else if (configuration === 'corner') {
         total += prices.installationCorner;
-        details.push(`Монтаж угловой раздвижной: ${prices.installationCorner} ₾`);
+        details.push(`Монтаж угловой раздвижной: ${prices.installationCorner} ${prices.currency}`);
       } else if (configuration === 'unique') {
         total += prices.installationUnique;
-        details.push(`Установка: ${prices.installationUnique} ₾`);
+        details.push(`Установка: ${prices.installationUnique} ${prices.currency}`);
       }
     }
 
     // Добавляем базовую стоимость в конец
     if (configuration === 'glass') {
       total += prices.glassPrice;
-      details.push(`Базовая стоимость: ${prices.glassPrice} ₾`);
+      details.push(`Базовая стоимость: ${prices.glassPrice} ${prices.currency}`);
     } else if (configuration === 'straight') {
       total += prices.straightPrice;
-      details.push(`Базовая стоимость: ${prices.straightPrice} ₾`);
+      details.push(`Базовая стоимость: ${prices.straightPrice} ${prices.currency}`);
     } else if (configuration === 'corner') {
       total += prices.cornerPrice;
-      details.push(`Базовая стоимость: ${prices.cornerPrice} ₾`);
+      details.push(`Базовая стоимость: ${prices.cornerPrice} ${prices.currency}`);
     } else if (configuration === 'unique') {
       total += prices.uniquePrice;
-      details.push(`Базовая стоимость: ${prices.uniquePrice} ₾`);
+      details.push(`Базовая стоимость: ${prices.uniquePrice} ${prices.currency}`);
     }
 
     setCalculationDetails(details);
@@ -1083,6 +1085,23 @@ const Calculator: React.FC = () => {
       }]);
       setProfileCount(0);
       setComment('');
+    } else if (newConfig === 'glass') {
+      // Добавляем профиль и крепление по умолчанию для стекляшки
+      const newItems: CustomHardwareItem[] = [
+        {
+          id: Date.now().toString(),
+          name: 'Профиль',
+          count: 1
+        },
+        {
+          id: (Date.now() + 1).toString(),
+          name: 'Крепление палка стена-стекло',
+          count: 1
+        }
+      ];
+      setAdditionalHardware({
+        customItems: newItems
+      });
     }
     
     setErrors({});
@@ -1433,16 +1452,9 @@ const Calculator: React.FC = () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => {
-                  if (editingId && priceChanged) {
-                    setOpenSaveDialog(true);
-                  } else {
-                    handleSave();
-                  }
-                }}
+                onClick={handleSave}
                 fullWidth
                 size="small"
-                disabled={!hardwareChanged}
               >
                 Сохранить
               </Button>
@@ -2382,16 +2394,9 @@ const Calculator: React.FC = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => {
-                        if (editingId && priceChanged) {
-                          setOpenSaveDialog(true);
-                        } else {
-                          handleSave();
-                        }
-                      }}
+                      onClick={handleSave}
                       fullWidth
                       size="large"
-                      disabled={!hardwareChanged}
                     >
                       Сохранить
                     </Button>

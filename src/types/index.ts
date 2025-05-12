@@ -107,4 +107,6 @@ export interface PriceConfig {
   installationUnique: number;
   mountingWallGlass: number;
   mountingWallGlassGlass: number;
+  profile8mm: number;
+  profile10mm: number;
 } 
