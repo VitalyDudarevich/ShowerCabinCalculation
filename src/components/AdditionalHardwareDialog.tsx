@@ -21,7 +21,9 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import type { CustomHardwareItem, PriceConfig } from '../types';
+import type { CustomHardwareItem } from '../types';
+import type { PriceConfig } from '../types/priceConfig';
+import { getItemPrice } from '../utils/priceUtils';
 
 interface AdditionalHardwareDialogProps {
   open: boolean;
@@ -116,41 +118,6 @@ export const AdditionalHardwareDialog: React.FC<AdditionalHardwareDialogProps> =
     return items;
   };
 
-  const getItemPrice = (itemName: string): number => {
-    switch (itemName) {
-      case 'Петля 90°':
-        return prices.hinge90;
-      case 'Петля 135°':
-        return prices.hinge135;
-      case 'Петля 180°':
-        return prices.hinge180;
-      case 'Крепление стекло-стекло':
-        return prices.mountingGlass;
-      case 'Палка стена-стекло':
-        return prices.mountingWall;
-      case 'Крепление труба-стекло':
-        return prices.mountingPipe;
-      case 'Уголок труба-труба':
-        return prices.mountingPipePipe;
-      case 'Профиль':
-        return prices.profile8mm;
-      case 'Раздвижная система':
-        return prices.slidingSystem;
-      case 'Профильная труба (рельса)':
-        return prices.profileTube;
-      case 'Ручка кноб':
-        return prices.handleKnob;
-      case 'Ручка скоба маленькая':
-        return prices.handleBracketSmall;
-      case 'Ручка скоба большая':
-        return prices.handleBracketLarge;
-      case 'Дополнительная направляющая':
-        return prices.additionalRail;
-      default:
-        return 0;
-    }
-  };
-
   const handleAddItem = () => {
     if (!selectedItem) return;
 
@@ -158,7 +125,7 @@ export const AdditionalHardwareDialog: React.FC<AdditionalHardwareDialogProps> =
       id: Date.now().toString(),
       name: selectedItem,
       quantity: quantity,
-      price: getItemPrice(selectedItem)
+      price: getItemPrice(selectedItem, prices)
     };
 
     setCustomItems([...customItems, newItem]);
@@ -178,7 +145,7 @@ export const AdditionalHardwareDialog: React.FC<AdditionalHardwareDialogProps> =
       item.id === id ? { 
         ...item, 
         quantity: newQuantity,
-        price: getItemPrice(item.name)
+        price: getItemPrice(item.name, prices)
       } : item
     ));
     setHasChanges(true);

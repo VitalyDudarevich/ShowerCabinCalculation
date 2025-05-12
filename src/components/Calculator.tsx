@@ -36,6 +36,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { calculatorStyles } from '../styles/calculatorStyles';
+import { getItemPrice } from '../utils/priceUtils';
+import type { PriceConfig as ImportedPriceConfig } from '../types/priceConfig';
+import type { ProjectStatus } from '../types';
 
 interface PriceConfig {
   glassClear8mm: number;
@@ -46,7 +49,7 @@ interface PriceConfig {
   profileMatte10mm: number;
   profileBlack: number;
   profileGold: number;
-  mountingWallGlass: number;
+  mountingWall: number;
   mountingWallGlassGlass: number;
   slidingSystem: number;
   handleKnob: number;
@@ -76,9 +79,10 @@ interface PriceConfig {
   installationUnique: number;
   profile8mm: number;
   profile10mm: number;
+  mountingPipe: number;
+  mountingPipePipe: number;
+  mountingGlass: number;
 }
-
-type ProjectStatus = 'Рассчет' | 'Согласован' | 'Заказан' | 'Стекло доставлено' | 'Установка' | 'Установлено' | 'Оплачено';
 
 interface SavedConfiguration {
   id: string;
@@ -212,7 +216,7 @@ const Calculator: React.FC = () => {
     profileMatte10mm: 0,
     profileBlack: 0,
     profileGold: 0,
-    mountingWallGlass: 0,
+    mountingWall: 0,
     mountingWallGlassGlass: 0,
     slidingSystem: 0,
     handleKnob: 0,
@@ -242,6 +246,9 @@ const Calculator: React.FC = () => {
     installationUnique: 0,
     profile8mm: 0,
     profile10mm: 0,
+    mountingPipe: 0,
+    mountingPipePipe: 0,
+    mountingGlass: 0,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [originalPrice, setOriginalPrice] = useState<number>(0);
@@ -356,7 +363,9 @@ const Calculator: React.FC = () => {
       const savedPrices = localStorage.getItem('showerPrices');
       if (savedPrices) {
         const parsedPrices = JSON.parse(savedPrices);
-        console.log('Loaded prices:', parsedPrices);
+        console.log('Loaded prices from localStorage:', parsedPrices);
+        console.log('mountingWall:', parsedPrices.mountingWall);
+        console.log('mountingPipePipe:', parsedPrices.mountingPipePipe);
         setPrices(parsedPrices);
         setCurrency(parsedPrices.currency || 'BYN');
         setUsdRate(parsedPrices.usdRate || 1);
@@ -695,25 +704,42 @@ const Calculator: React.FC = () => {
         details.push(`Профиль ${profileColorName} ${glassThickness} мм (${item.count} шт.): ${itemPrice.toFixed(2)} ${prices.currency}`);
         continue;
       }
-
-      if (item.name.includes('Петля 90 градусов')) {
-        itemPrice = prices.hinge90 * item.count;
-      } else if (item.name.includes('Петля 180 градусов')) {
-        itemPrice = prices.hinge180 * item.count;
-      } else if (item.name.includes('Петля 135 градусов')) {
-        itemPrice = prices.hinge135 * item.count;
-      } else if (item.name.includes('Ручка')) {
-        itemPrice = prices.handleKnob * item.count;
-      } else if (item.name.includes('Крепление палка стена-стекло')) {
-        itemPrice = prices.mountingWallGlass * item.count;
-      } else if (item.name.includes('Крепление палка стена-стекло-стекло')) {
-        itemPrice = prices.mountingWallGlassGlass * item.count;
-      } else if (item.name.includes('Раздвижная система')) {
-        itemPrice = prices.slidingSystem * item.count;
-      } else if (item.name.includes('Дополнительная направляющая')) {
-        itemPrice = prices.additionalRail * item.count;
-      } else if (item.name.includes('Дополнительный профиль')) {
+      if (item.name === 'Профильная труба (рельса)') {
         itemPrice = prices.profileTube * item.count;
+        total += itemPrice;
+        details.push(`${item.name} (${item.count} шт.): ${itemPrice.toFixed(2)} ${prices.currency}`);
+        continue;
+      }
+      if (item.name === 'Петля 90 градусов') {
+        itemPrice = prices.hinge90 * item.count;
+      } else if (item.name === 'Петля 180 градусов') {
+        itemPrice = prices.hinge180 * item.count;
+      } else if (item.name === 'Петля 135 градусов') {
+        itemPrice = prices.hinge135 * item.count;
+      } else if (item.name === 'Ручка') {
+        itemPrice = prices.handleKnob * item.count;
+      } else if (item.name === 'Палка стена-стекло') {
+        itemPrice = prices.mountingWall * item.count;
+        console.log('Палка стена-стекло:', {
+          price: prices.mountingWall,
+          count: item.count,
+          total: itemPrice
+        });
+      } else if (item.name === 'Крепление палка стена-стекло-стекло') {
+        itemPrice = prices.mountingWallGlassGlass * item.count;
+      } else if (item.name === 'Раздвижная система') {
+        itemPrice = prices.slidingSystem * item.count;
+      } else if (item.name === 'Фиксатор') {
+        itemPrice = prices.additionalRail * item.count;
+      } else if (item.name === 'Дополнительный профиль') {
+        itemPrice = prices.profileTube * item.count;
+      } else if (item.name === 'Уголок труба-труба') {
+        itemPrice = prices.mountingPipePipe * item.count;
+        console.log('Уголок труба-труба:', {
+          price: prices.mountingPipePipe,
+          count: item.count,
+          total: itemPrice
+        });
       }
       
       total += itemPrice;
@@ -763,24 +789,17 @@ const Calculator: React.FC = () => {
   };
 
   // Обработчики событий для стекла
-  const handleGlassColorChange = (id: string) => (event: SelectChangeEvent<string>) => {
+  const handleGlassColorChange = (id: string) => (event: SelectChangeEvent) => {
     updateGlass(id, 'color', event.target.value);
-    setErrors(prev => ({ ...prev, glassColor: '' }));
+    if (configuration === 'unique') {
+      setTimeout(() => calculatePrice(), 0);
+    }
   };
 
-  const handleGlassThicknessChange = (id: string) => (event: SelectChangeEvent<string>) => {
+  const handleGlassThicknessChange = (id: string) => (event: SelectChangeEvent) => {
     updateGlass(id, 'thickness', event.target.value);
-    setErrors(prev => ({ ...prev, glassThickness: '' }));
-  };
-
-  const handleGlassHeightChange = (id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    if (value === '' || (/^\d{0,4}$/.test(value) && parseInt(value) <= 5000)) {
-      updateGlass(id, 'height', value);
-      setErrors(prev => ({ ...prev, glassHeight: '' }));
-      if (configuration === 'unique') {
-        setTimeout(() => calculatePrice(), 0);
-      }
+    if (configuration === 'unique') {
+      setTimeout(() => calculatePrice(), 0);
     }
   };
 
@@ -795,11 +814,19 @@ const Calculator: React.FC = () => {
     }
   };
 
+  const handleGlassHeightChange = (id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    if (value === '' || (/^\d{0,4}$/.test(value) && parseInt(value) <= 5000)) {
+      updateGlass(id, 'height', value);
+      setErrors(prev => ({ ...prev, glassHeight: '' }));
+      if (configuration === 'unique') {
+        setTimeout(() => calculatePrice(), 0);
+      }
+    }
+  };
+
   const handleGlassNameChange = (id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     updateGlass(id, 'name', event.target.value);
-    if (configuration === 'unique') {
-      setTimeout(() => calculatePrice(), 0);
-    }
   };
 
   const handleProfileCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -815,82 +842,23 @@ const Calculator: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    
+
     // Общие проверки для всех конфигураций
     if (!customerName.trim()) {
       newErrors.customerName = 'Введите название проекта';
     }
-    
+
+    // Проверка конфигурации
     if (!configuration) {
       newErrors.configuration = 'Выберите конфигурацию';
     }
 
-    // Проверки для всех конфигураций
-    if (configuration) {
-      if (!glasses[0].color) newErrors.glassColor = 'Выберите цвет стекла';
-      if (!glasses[0].thickness) newErrors.glassThickness = 'Выберите толщину стекла';
-      if (!hardwareColor) newErrors.hardwareColor = 'Выберите цвет фурнитуры';
-      if (profileCount < 0 || profileCount > 9) newErrors.profileCount = 'Количество профиля должно быть от 0 до 9';
+    // Проверка цвета фурнитуры
+    if (!hardwareColor) {
+      newErrors.hardwareColor = 'Выберите цвет фурнитуры';
     }
 
-    // Проверки для прямой раздвижной
-    if (configuration === 'straight') {
-      if (isOpeningSize) {
-        if (!openingLength || parseFloat(openingLength) < 10) {
-          newErrors.openingLength = 'Ширина проема должна быть не менее 10 мм';
-        }
-        if (!openingHeight || parseFloat(openingHeight) < 10) {
-          newErrors.openingHeight = 'Высота кабины должна быть не менее 10 мм';
-        }
-      } else {
-        if (!glasses[0].height || parseFloat(glasses[0].height) < 10) {
-          newErrors.glassHeight = 'Высота должна быть не менее 10 мм';
-        }
-        if (!glasses[0].width || parseFloat(glasses[0].width) < 10) {
-          newErrors.glassWidth = 'Ширина должна быть не менее 10 мм';
-        }
-        if (!doorWidth || parseFloat(doorWidth) < 10) {
-          newErrors.doorWidth = 'Ширина двери должна быть не менее 10 мм';
-        }
-      }
-    }
-
-    // Проверки для угловой раздвижной
-    if (configuration === 'corner') {
-      if (!cornerLength || parseFloat(cornerLength) < 10) {
-        newErrors.cornerLength = 'Длина должна быть не менее 10 мм';
-      }
-      if (!cornerWidth || parseFloat(cornerWidth) < 10) {
-        newErrors.cornerWidth = 'Ширина должна быть не менее 10 мм';
-      }
-      if (!glasses[0].height || parseFloat(glasses[0].height) < 10) {
-        newErrors.glassHeight = 'Высота должна быть не менее 10 мм';
-      }
-    }
-    
-    // Проверки для уникальной конфигурации
-    if (configuration === 'unique') {
-      glasses.forEach((glass, index) => {
-        if (!glass.color) {
-          newErrors[`glassColor_${glass.id}`] = 'Выберите цвет стекла';
-        }
-        if (!glass.thickness) {
-          newErrors[`glassThickness_${glass.id}`] = 'Выберите толщину стекла';
-        }
-        if (!glass.height || parseFloat(glass.height) < 10) {
-          newErrors[`glassHeight_${glass.id}`] = 'Высота должна быть не менее 10 мм';
-        }
-        if (!glass.width || parseFloat(glass.width) < 10) {
-          newErrors[`glassWidth_${glass.id}`] = 'Ширина должна быть не менее 10 мм';
-        }
-        if (!glass.name.trim()) {
-          newErrors[`glassName_${glass.id}`] = 'Введите название стекла';
-        }
-      });
-    }
-    
     setErrors(newErrors);
-    console.log('Validation errors:', newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -1067,18 +1035,29 @@ const Calculator: React.FC = () => {
     const newConfig = event.target.value;
     setConfiguration(newConfig);
     
-    if (newConfig === 'unique') {
-      setGlasses([{
-        id: '1',
-        color: GLASS_TYPES.CLEAR,
-        thickness: GLASS_THICKNESS.EIGHT.toString(),
-        height: '',
-        width: '',
-        name: 'Стекло 1'
-      }]);
-      setProfileCount(0);
-      setComment('');
-    } else if (newConfig === 'glass') {
+    // Сбрасываем размеры стекла
+    setGlasses([{
+      id: '1',
+      color: GLASS_TYPES.CLEAR,
+      thickness: GLASS_THICKNESS.EIGHT.toString(),
+      height: '',
+      width: '',
+      name: 'Стекло 1'
+    }]);
+    
+    // Сбрасываем цвет фурнитуры
+    setHardwareColor('');
+    
+    // Сбрасываем список фурнитуры
+    setAdditionalHardware({ customItems: [] });
+    
+    // Сбрасываем комментарий
+    setComment('');
+    
+    // Сбрасываем профиль
+    setProfileCount(0);
+    
+    if (newConfig === 'glass') {
       // Добавляем дефолтную фурнитуру для стекляшки
       const newItems: CustomHardwareItem[] = [
         {
@@ -1147,6 +1126,9 @@ const Calculator: React.FC = () => {
     }
     
     setErrors({});
+    setEditingId(null);
+    setPriceChanged(false);
+    setChangedDetails({});
   };
 
   // Добавляем useEffect для автоматического расчета при изменении значений
@@ -1250,7 +1232,7 @@ const Calculator: React.FC = () => {
     setProfileCount(0);
     setComment('');
     setErrors({});
-    editingId(null);
+    setEditingId(null);
     setPriceChanged(false);
     setChangedDetails({});
     setCalculationDetails([]);
@@ -1263,6 +1245,13 @@ const Calculator: React.FC = () => {
     setIsOpeningSize(true);
     setOpeningLength('');
     setOpeningHeight('');
+    setAdditionalRail(false);
+    setDoorWidth('');
+    setCornerLength('');
+    setCornerWidth('');
+    setAdditionalHardware({ customItems: [] });
+    setDelivery(true);
+    setInstallation(true);
     localStorage.removeItem('calculatorState');
   };
 
@@ -1384,6 +1373,9 @@ const Calculator: React.FC = () => {
   const getAvailableHardwareItems = () => {
     const items = [];
     
+    if (prices.additionalRail > 0) {
+      items.push('Фиксатор');
+    }
     if (prices.hinge90 > 0) {
       items.push('Петля 90 градусов');
     }
@@ -1396,8 +1388,8 @@ const Calculator: React.FC = () => {
     if (prices.handleKnob > 0) {
       items.push('Ручка');
     }
-    if (prices.mountingWallGlass > 0) {
-      items.push('Крепление палка стена-стекло');
+    if (prices.mountingWall > 0) {
+      items.push('Палка стена-стекло');
     }
     if (prices.mountingWallGlassGlass > 0) {
       items.push('Крепление палка стена-стекло-стекло');
@@ -1405,39 +1397,8 @@ const Calculator: React.FC = () => {
     if (prices.slidingSystem > 0) {
       items.push('Раздвижная система');
     }
-    if (prices.additionalRail > 0) {
-      items.push('Дополнительная направляющая');
-    }
-    if (prices.profileTube > 0) {
-      items.push('Дополнительный профиль');
-    }
     
     return items;
-  };
-
-  const getItemPrice = (itemName: string): number => {
-    switch (itemName) {
-      case 'Петля 90 градусов':
-        return prices.hinge90;
-      case 'Петля 180 градусов':
-        return prices.hinge180;
-      case 'Петля 135 градусов':
-        return prices.hinge135;
-      case 'Ручка':
-        return prices.handleKnob;
-      case 'Крепление палка стена-стекло':
-        return prices.mountingWallGlass;
-      case 'Крепление палка стена-стекло-стекло':
-        return prices.mountingWallGlassGlass;
-      case 'Раздвижная система':
-        return prices.slidingSystem;
-      case 'Дополнительная направляющая':
-        return prices.additionalRail;
-      case 'Дополнительный профиль':
-        return prices.profileTube;
-      default:
-        return 0;
-    }
   };
 
   const handleDeleteClick = (id: string) => {
@@ -1503,59 +1464,63 @@ const Calculator: React.FC = () => {
 
   const calculateTotal = () => {
     let total = 0;
-    let totalUsd = 0;
+    const { width, height } = glasses[0]; // Берем размеры первого стекла
 
     // Расчет стоимости стекла
-    const glassArea = width * height;
-    const glassPrice = getGlassPrice();
+    const glassArea = Number(width) * Number(height);
+    const glassPrice = getGlassPrice(glasses[0]);
     total += glassArea * glassPrice;
 
     // Расчет стоимости профиля
-    const profileLength = (width + height) * 2;
+    const profileLength = (Number(width) + Number(height)) * 2;
     const profilePrice = getProfilePrice();
     total += profileLength * profilePrice;
 
     // Расчет стоимости фурнитуры
-    hardwareItems.forEach(item => {
-      let itemPrice = 0;
-      if (item.name.includes('Петля')) {
-        itemPrice = getItemPrice(item.name) * item.count;
-      } else if (item.name.includes('Ручка')) {
-        itemPrice = getItemPrice(item.name) * item.count;
-      } else if (item.name.includes('Крепление')) {
-        itemPrice = getItemPrice(item.name) * item.count;
-      } else if (item.name.includes('Раздвижная система')) {
-        itemPrice = getItemPrice(item.name) * item.count;
-      } else if (item.name.includes('Дополнительная направляющая')) {
-        itemPrice = getItemPrice(item.name) * item.count;
-      } else if (item.name.includes('Дополнительный профиль')) {
-        itemPrice = getItemPrice(item.name) * item.count;
-      }
+    additionalHardware.customItems.forEach((item: CustomHardwareItem) => {
+      const itemPrice = getItemPrice(item.name, prices) * item.count;
       total += itemPrice;
     });
 
     // Расчет стоимости установки
-    if (installationType === 'glass') {
-      total += prices.installationGlass;
-    } else if (installationType === 'straight') {
-      total += prices.installationStraight;
-    } else if (installationType === 'corner') {
-      total += prices.installationCorner;
-    } else if (installationType === 'unique') {
-      total += prices.installationUnique;
+    if (installation) {
+      if (configuration === 'glass') {
+        total += prices.installationGlass;
+      } else if (configuration === 'straight') {
+        total += prices.installationStraight;
+      } else if (configuration === 'corner') {
+        total += prices.installationCorner;
+      }
     }
 
-    // Добавление стоимости доставки
-    if (delivery) {
-      total += prices.delivery;
-    }
+    return total;
+  };
 
-    // Расчет в USD
-    if (prices.showUsdPrice && prices.usdRate > 0) {
-      totalUsd = total / prices.usdRate;
+  const getGlassPrice = (glass: Glass): number => {
+    const thickness = glass.thickness;
+    const color = glass.color;
+    
+    if (color === GLASS_TYPES.CLEAR) {
+      return thickness === '8' ? prices.glassClear8mm : prices.glassClear10mm;
+    } else if (color === GLASS_TYPES.ULTRA_CLEAR) {
+      return thickness === '8' ? prices.glassUltraClear8mm : prices.glassUltraClear10mm;
+    } else if (color === GLASS_TYPES.MATTE_SANDBLASTED) {
+      return thickness === '8' ? prices.glassMatteSandblasted8mm : prices.glassMatteSandblasted10mm;
+    } else if (color === GLASS_TYPES.MATTE_FACTORY) {
+      return prices.glassMatteFactory10mm;
     }
+    return 0;
+  };
 
-    return { total, totalUsd };
+  const getProfilePrice = (): number => {
+    if (hardwareColor === 'Хром') {
+      return glasses[0].thickness === '8' ? prices.profileChrome8mm : prices.profileMatte10mm;
+    } else if (hardwareColor === 'Черный') {
+      return prices.profileBlack;
+    } else if (hardwareColor === 'Золото') {
+      return prices.profileGold;
+    }
+    return 0;
   };
 
   return (
@@ -1960,14 +1925,9 @@ const Calculator: React.FC = () => {
                           label="Ширина проема (мм)"
                           type="number"
                           value={openingLength}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 5000)) {
-                              setOpeningLength(value);
-                            }
-                          }}
-                          inputProps={{ min: 10, max: 5000 }}
+                          onChange={(e) => setOpeningLength(e.target.value)}
                           fullWidth
+                          margin="normal"
                           error={!!errors.openingLength}
                           helperText={errors.openingLength}
                           required
@@ -1975,17 +1935,12 @@ const Calculator: React.FC = () => {
                       </Grid>
                       <Grid item xs={6}>
                         <TextField
-                          label="Высота кабины (мм)"
+                          label="Высота проема (мм)"
                           type="number"
                           value={openingHeight}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 5000)) {
-                              setOpeningHeight(value);
-                            }
-                          }}
-                          inputProps={{ min: 10, max: 5000 }}
+                          onChange={(e) => setOpeningHeight(e.target.value)}
                           fullWidth
+                          margin="normal"
                           error={!!errors.openingHeight}
                           helperText={errors.openingHeight}
                           required
@@ -2002,6 +1957,8 @@ const Calculator: React.FC = () => {
                           onChange={handleGlassWidthChange('1')}
                           inputProps={{ min: 10, max: 5000 }}
                           fullWidth
+                          error={!!errors.glassWidth}
+                          helperText={errors.glassWidth}
                           required
                         />
                       </Grid>
@@ -2018,6 +1975,8 @@ const Calculator: React.FC = () => {
                           }}
                           inputProps={{ min: 10, max: 5000 }}
                           fullWidth
+                          error={!!errors.doorWidth}
+                          helperText={errors.doorWidth}
                           required
                         />
                       </Grid>
@@ -2029,6 +1988,8 @@ const Calculator: React.FC = () => {
                           onChange={handleGlassHeightChange('1')}
                           inputProps={{ min: 10, max: 5000 }}
                           fullWidth
+                          error={!!errors.glassHeight}
+                          helperText={errors.glassHeight}
                           required
                         />
                       </Grid>
@@ -2188,6 +2149,8 @@ const Calculator: React.FC = () => {
                         onChange={handleCornerWidthChange}
                         inputProps={{ min: 10, max: 5000 }}
                         fullWidth
+                        error={!!errors.cornerWidth}
+                        helperText={errors.cornerWidth || 'Обязательное поле'}
                         required
                       />
                     </Grid>
@@ -2199,6 +2162,8 @@ const Calculator: React.FC = () => {
                         onChange={handleCornerLengthChange}
                         inputProps={{ min: 10, max: 5000 }}
                         fullWidth
+                        error={!!errors.cornerLength}
+                        helperText={errors.cornerLength || 'Обязательное поле'}
                         required
                       />
                     </Grid>

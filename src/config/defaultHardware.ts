@@ -9,7 +9,7 @@ export const defaultHardwareConfig: DefaultHardwareConfig = {
       quantity: 1
     },
     {
-      name: 'Палка стена стекло',
+      name: 'Палка стена-стекло',
       color: 'default',
       price: 0,
       quantity: 1

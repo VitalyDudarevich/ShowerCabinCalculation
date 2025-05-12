@@ -28,7 +28,7 @@ interface PriceConfig {
   glassTinted10mm: number;
   profile8mm: number;
   profile10mm: number;
-  mountingWallGlass: number;
+  mountingWall: number;
   mountingWallGlassGlass: number;
   slidingSystem: number;
   handleKnob: number;
@@ -52,7 +52,6 @@ interface PriceConfig {
   uniquePrice: number;
   installationUnique: number;
   mountingGlass: number;
-  mountingWall: number;
   mountingPipe: number;
   mountingPipePipe: number;
 }
@@ -76,7 +75,7 @@ const AdminPanel: React.FC = () => {
       glassTinted10mm: 0,
       profile8mm: 0,
       profile10mm: 0,
-      mountingWallGlass: 0,
+      mountingWall: 0,
       mountingWallGlassGlass: 0,
       slidingSystem: 0,
       handleKnob: 0,
@@ -105,7 +104,6 @@ const AdminPanel: React.FC = () => {
       uniquePrice: 0,
       installationUnique: 0,
       mountingGlass: 0,
-      mountingWall: 0,
       mountingPipe: 0,
       mountingPipePipe: 0
     };
@@ -240,7 +238,7 @@ const AdminPanel: React.FC = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Дополнительная направляющая"
+                  label="Фиксатор"
                   type="number"
                   value={prices.additionalRail}
                   onChange={(e) => handlePriceChange('additionalRail', e.target.value)}
