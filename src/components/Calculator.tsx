@@ -194,7 +194,7 @@ const Calculator: React.FC = () => {
     name: 'Стекло 1'
   }]);
   const [hardwareColor, setHardwareColor] = useState<string>('');
-  const [profileCount, setProfileCount] = useState<number>(1);
+  const [profileCount, setProfileCount] = useState<number>(0);
   const [comment, setComment] = useState<string>('');
   const [delivery, setDelivery] = useState<boolean>(true);
   const [installation, setInstallation] = useState<boolean>(true);
@@ -203,6 +203,7 @@ const Calculator: React.FC = () => {
   const [calculationDetails, setCalculationDetails] = useState<string[]>([]);
   const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [hardwareChanged, setHardwareChanged] = useState<boolean>(false);
   const [prices, setPrices] = useState<PriceConfig>({
     glassClear8mm: 0,
     glassClear10mm: 0,
@@ -281,6 +282,8 @@ const Calculator: React.FC = () => {
   const [openHardwareDialog, setOpenHardwareDialog] = useState(false);
   const [newHardwareName, setNewHardwareName] = useState<string>('');
   const [newHardwareCount, setNewHardwareCount] = useState<number>(1);
+  const [hardwareDialogChanged, setHardwareDialogChanged] = useState(false);
+  const [initialHardwareState, setInitialHardwareState] = useState<AdditionalHardware>({ customItems: [] });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -386,7 +389,7 @@ const Calculator: React.FC = () => {
           name: 'Стекло 1'
         }]);
         setHardwareColor(state.hardwareColor || '');
-        setProfileCount(state.profileCount || 1);
+        setProfileCount(state.profileCount || 0);
         setComment(state.comment || '');
         setDelivery(state.delivery !== undefined ? state.delivery : true);
         setInstallation(state.installation !== undefined ? state.installation : true);
@@ -630,8 +633,8 @@ const Calculator: React.FC = () => {
       }
     }
 
-    // Расчет стоимости профиля для всех конфигураций
-    if (hardwareColor && profileCount > 0) {
+    // Расчет стоимости профиля только если выбран цвет фурнитуры
+    if (hardwareColor) {
       let profilePrice = 0;
       let hardwareType = '';
       
@@ -669,15 +672,20 @@ const Calculator: React.FC = () => {
         }
       }
 
-      if (profilePrice > 0) {
+      if (profilePrice > 0 && profileCount > 0) {
         const profileCost = profilePrice * profileCount;
         total += profileCost;
         details.push(`Профиль ${hardwareType} (${profileCount} шт.): ${profileCost.toFixed(2)} ₾`);
+      } else if (profileCount > 0) {
+        details.push(`Профиль ${hardwareType} (${profileCount} шт.): 0 ₾`);
       }
+    } else if (additionalHardware.customItems.length > 0) {
+      // Если фурнитура добавлена, но цвет не выбран
+      details.push('Цвет фурнитуры не указан');
     }
 
     // Расчет стоимости дополнительной фурнитуры
-    if (additionalHardware.customItems.length > 0) {
+    if (additionalHardware.customItems.length > 0 && hardwareColor) {
       additionalHardware.customItems.forEach(item => {
         if (item.count > 0) {
           let itemPrice = 0;
@@ -959,6 +967,7 @@ const Calculator: React.FC = () => {
       setEditingId(null);
       setPriceChanged(false);
       setChangedDetails({});
+      setHardwareChanged(false);
       setShowSuccessMessage(true);
     } catch (error) {
       console.error('Error saving to localStorage:', error);
@@ -976,7 +985,7 @@ const Calculator: React.FC = () => {
       name: 'Стекло 1'
     }]);
     setHardwareColor('');
-    setProfileCount(1);
+    setProfileCount(0);
     setComment('');
     setErrors({});
     setCalculationDetails([]);
@@ -1072,7 +1081,7 @@ const Calculator: React.FC = () => {
         width: '',
         name: 'Стекло 1'
       }]);
-      setProfileCount(1);
+      setProfileCount(0);
       setComment('');
     }
     
@@ -1118,7 +1127,7 @@ const Calculator: React.FC = () => {
       width: '',
       name: 'Стекло 1'
     }]);
-    setProfileCount(1);
+    setProfileCount(0);
     setComment('');
     setOpeningLength('');
     setOpeningHeight('');
@@ -1177,7 +1186,7 @@ const Calculator: React.FC = () => {
       name: 'Стекло 1'
     }]);
     setHardwareColor('');
-    setProfileCount(1);
+    setProfileCount(0);
     setComment('');
     setErrors({});
     setEditingId(null);
@@ -1246,10 +1255,33 @@ const Calculator: React.FC = () => {
     ));
   };
 
+  const handleOpenHardwareDialog = () => {
+    setInitialHardwareState(JSON.parse(JSON.stringify(additionalHardware)));
+    setHardwareDialogChanged(false);
+    setOpenHardwareDialog(true);
+  };
+
+  const updateCustomHardwareCount = (id: string, count: number) => {
+    setAdditionalHardware(prev => ({
+      ...prev,
+      customItems: prev.customItems.map(item =>
+        item.id === id ? { ...item, count } : item
+      )
+    }));
+    setHardwareDialogChanged(true);
+  };
+
+  const removeCustomHardware = (id: string) => {
+    setAdditionalHardware(prev => ({
+      ...prev,
+      customItems: prev.customItems.filter(item => item.id !== id)
+    }));
+    setHardwareDialogChanged(true);
+  };
+
   const addCustomHardware = () => {
     if (!newHardwareName.trim()) return;
     
-    // Проверяем, есть ли элемент в списке доступных опций
     const availableItems = getAvailableHardwareItems();
     const isValidItem = availableItems.includes(newHardwareName.trim());
     
@@ -1266,30 +1298,26 @@ const Calculator: React.FC = () => {
       customItems: [...prev.customItems, newItem]
     }));
     
-    // Очищаем поля после добавления
     setNewHardwareName('');
     setNewHardwareCount(1);
-    
-    // Пересчитываем цену
-    setTimeout(() => calculatePrice(), 0);
+    setHardwareDialogChanged(true);
   };
 
-  const removeCustomHardware = (id: string) => {
-    setAdditionalHardware(prev => ({
-      ...prev,
-      customItems: prev.customItems.filter(item => item.id !== id)
-    }));
+  const handleSaveHardware = () => {
+    if (newHardwareName.trim()) {
+      if (getAvailableHardwareItems().includes(newHardwareName.trim())) {
+        addCustomHardware();
+      }
+    }
+    setOpenHardwareDialog(false);
+    calculatePrice();
+    setHardwareDialogChanged(false);
   };
 
-  const updateCustomHardwareCount = (id: string, count: number) => {
-    setAdditionalHardware(prev => ({
-      ...prev,
-      customItems: prev.customItems.map(item =>
-        item.id === id ? { ...item, count } : item
-      )
-    }));
-    // Добавляем вызов calculatePrice после обновления состояния
-    setTimeout(() => calculatePrice(), 0);
+  const handleCloseHardware = () => {
+    setAdditionalHardware(initialHardwareState);
+    setOpenHardwareDialog(false);
+    setHardwareDialogChanged(false);
   };
 
   const getAvailableHardwareItems = () => {
@@ -1356,11 +1384,25 @@ const Calculator: React.FC = () => {
         configuration === 'unique' ? 'Уникальная конфигурация' : configuration
       }`,
       comment && `Комментарий: ${comment}`,
-      ...calculationDetails.map(detail => detail.replace(/(\d+\.?\d*)\s*₾/, (match, price) => {
-        const numPrice = parseFloat(price);
-        const currencySymbol = currency === 'BYN' ? 'BYN' : '₾';
-        return `${numPrice.toFixed(2)} ${currencySymbol}`;
-      })),
+      ...calculationDetails.map((detail, index) => {
+        const formattedDetail = detail.replace(/(\d+\.?\d*)\s*₾/, (match: any, price: any) => {
+          const numPrice = parseFloat(price);
+          const currencySymbol = currency === 'BYN' ? 'BYN' : '₾';
+          return `${numPrice.toFixed(2)} ${currencySymbol}`;
+        });
+        return (
+          <ListItem key={index} sx={calculatorStyles.listItem}>
+            <ListItemText
+              primary={
+                <Typography sx={{ fontWeight: 'normal', fontSize: '0.9rem' }}>
+                  {formattedDetail}
+                </Typography>
+              }
+              sx={calculatorStyles.listItemText}
+            />
+          </ListItem>
+        );
+      }),
       `Итоговая стоимость: ${totalPrice.toFixed(2)} ${currency === 'BYN' ? 'BYN' : '₾'}${prices.showUsdPrice ? ` (~${(totalPrice / prices.usdRate).toFixed(2)} $)` : ''}`
     ].filter(Boolean).join('\n');
 
@@ -1400,6 +1442,7 @@ const Calculator: React.FC = () => {
                 }}
                 fullWidth
                 size="small"
+                disabled={!hardwareChanged}
               >
                 Сохранить
               </Button>
@@ -1450,14 +1493,14 @@ const Calculator: React.FC = () => {
                 </ListItem>
               )}
               {calculationDetails.map((detail, index) => {
-                const formattedDetail = detail.replace(/(\d+\.?\d*)\s*₾/, (match, price) => {
+                const formattedDetail = detail.replace(/(\d+\.?\d*)\s*₾/, (match: any, price: any) => {
                   const numPrice = parseFloat(price);
                   const currencySymbol = currency === 'BYN' ? 'BYN' : '₾';
                   return `${numPrice.toFixed(2)} ${currencySymbol}`;
                 });
                 return (
                   <ListItem key={index} sx={calculatorStyles.listItem}>
-                    <ListItemText 
+                    <ListItemText
                       primary={
                         <Typography sx={{ fontWeight: 'normal', fontSize: '0.9rem' }}>
                           {formattedDetail}
@@ -1621,7 +1664,7 @@ const Calculator: React.FC = () => {
                   </Grid>
 
                   <Grid container spacing={2} sx={calculatorStyles.inputGrid}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12}>
                       <FormControl fullWidth error={!!errors.hardwareColor} required>
                         <InputLabel>Цвет фурнитуры</InputLabel>
                         <Select
@@ -1637,19 +1680,55 @@ const Calculator: React.FC = () => {
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
                       </FormControl>
                     </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        label="Количество профиля"
-                        type="number"
-                        value={profileCount}
-                        onChange={handleProfileCountChange}
-                        inputProps={{ min: 0, max: 9 }}
+                    <Grid item xs={12}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleOpenHardwareDialog}
                         fullWidth
-                        error={!!errors.profileCount}
-                        helperText={errors.profileCount}
-                        required
-                      />
+                        sx={{ mt: 2 }}
+                      >
+                        Добавить фурнитуру
+                      </Button>
                     </Grid>
+                    {additionalHardware.customItems.length > 0 && (
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 2 }}>
+                          {additionalHardware.customItems.map((item) => (
+                            <Box
+                              key={item.id}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                mb: 2,
+                                p: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1
+                              }}
+                            >
+                              <Typography sx={{ flex: 1 }}>{item.name}</Typography>
+                              <Typography sx={{ minWidth: '80px' }}>
+                                {item.count} шт.
+                              </Typography>
+                              <IconButton
+                                onClick={() => removeCustomHardware(item.id)}
+                                size="small"
+                                sx={{
+                                  color: 'text.secondary',
+                                  '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    color: 'error.main'
+                                  }
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Grid>
+                    )}
                   </Grid>
 
                   <Box sx={calculatorStyles.checkboxContainer}>
@@ -1816,7 +1895,7 @@ const Calculator: React.FC = () => {
                   )}
 
                   <Grid container spacing={2} sx={calculatorStyles.inputGrid}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12}>
                       <FormControl fullWidth error={!!errors.hardwareColor} required>
                         <InputLabel>Цвет фурнитуры</InputLabel>
                         <Select
@@ -1832,19 +1911,55 @@ const Calculator: React.FC = () => {
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
                       </FormControl>
                     </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        label="Количество профиля"
-                        type="number"
-                        value={profileCount}
-                        onChange={handleProfileCountChange}
-                        inputProps={{ min: 0, max: 9 }}
+                    <Grid item xs={12}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleOpenHardwareDialog}
                         fullWidth
-                        error={!!errors.profileCount}
-                        helperText={errors.profileCount}
-                        required
-                      />
+                        sx={{ mt: 2 }}
+                      >
+                        Добавить фурнитуру
+                      </Button>
                     </Grid>
+                    {additionalHardware.customItems.length > 0 && (
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 2 }}>
+                          {additionalHardware.customItems.map((item) => (
+                            <Box
+                              key={item.id}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                mb: 2,
+                                p: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1
+                              }}
+                            >
+                              <Typography sx={{ flex: 1 }}>{item.name}</Typography>
+                              <Typography sx={{ minWidth: '80px' }}>
+                                {item.count} шт.
+                              </Typography>
+                              <IconButton
+                                onClick={() => removeCustomHardware(item.id)}
+                                size="small"
+                                sx={{
+                                  color: 'text.secondary',
+                                  '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    color: 'error.main'
+                                  }
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Grid>
+                    )}
                   </Grid>
 
                   <Box sx={calculatorStyles.checkboxContainer}>
@@ -1867,16 +1982,6 @@ const Calculator: React.FC = () => {
                       label="Установка"
                     />
                   </Box>
-
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={additionalRail}
-                        onChange={(e) => setAdditionalRail(e.target.checked)}
-                      />
-                    }
-                    label="Дополнительная направляющая"
-                  />
 
                   <TextField
                     label="Комментарий"
@@ -1965,7 +2070,7 @@ const Calculator: React.FC = () => {
                   </Grid>
 
                   <Grid container spacing={2} sx={calculatorStyles.inputGrid}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12}>
                       <FormControl fullWidth error={!!errors.hardwareColor} required>
                         <InputLabel>Цвет фурнитуры</InputLabel>
                         <Select
@@ -1981,19 +2086,55 @@ const Calculator: React.FC = () => {
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
                       </FormControl>
                     </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        label="Количество профиля"
-                        type="number"
-                        value={profileCount}
-                        onChange={handleProfileCountChange}
-                        inputProps={{ min: 0, max: 9 }}
+                    <Grid item xs={12}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleOpenHardwareDialog}
                         fullWidth
-                        error={!!errors.profileCount}
-                        helperText={errors.profileCount}
-                        required
-                      />
+                        sx={{ mt: 2 }}
+                      >
+                        Добавить фурнитуру
+                      </Button>
                     </Grid>
+                    {additionalHardware.customItems.length > 0 && (
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 2 }}>
+                          {additionalHardware.customItems.map((item) => (
+                            <Box
+                              key={item.id}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                mb: 2,
+                                p: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1
+                              }}
+                            >
+                              <Typography sx={{ flex: 1 }}>{item.name}</Typography>
+                              <Typography sx={{ minWidth: '80px' }}>
+                                {item.count} шт.
+                              </Typography>
+                              <IconButton
+                                onClick={() => removeCustomHardware(item.id)}
+                                size="small"
+                                sx={{
+                                  color: 'text.secondary',
+                                  '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    color: 'error.main'
+                                  }
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Grid>
+                    )}
                   </Grid>
 
                   <Box sx={calculatorStyles.checkboxContainer}>
@@ -2016,16 +2157,6 @@ const Calculator: React.FC = () => {
                       label="Установка"
                     />
                   </Box>
-
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={additionalRail}
-                        onChange={(e) => setAdditionalRail(e.target.checked)}
-                      />
-                    }
-                    label="Дополнительная направляющая"
-                  />
 
                   <TextField
                     label="Комментарий"
@@ -2132,8 +2263,8 @@ const Calculator: React.FC = () => {
                   </Button>
 
                   <Grid container spacing={2} sx={calculatorStyles.inputGrid}>
-                    <Grid item xs={6}>
-                      <FormControl fullWidth error={!!errors.hardwareColor}>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth error={!!errors.hardwareColor} required>
                         <InputLabel>Цвет фурнитуры</InputLabel>
                         <Select
                           value={hardwareColor}
@@ -2148,48 +2279,55 @@ const Calculator: React.FC = () => {
                         {errors.hardwareColor && <FormHelperText>{errors.hardwareColor}</FormHelperText>}
                       </FormControl>
                     </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        label="Количество профиля"
-                        type="number"
-                        value={profileCount}
-                        onChange={handleProfileCountChange}
-                        inputProps={{ min: 0, max: 9 }}
-                        fullWidth
-                        error={!!errors.profileCount}
-                        helperText={errors.profileCount}
-                      />
-                    </Grid>
                     <Grid item xs={12}>
                       <Button
                         variant="outlined"
-                        onClick={() => setOpenHardwareDialog(true)}
+                        onClick={handleOpenHardwareDialog}
                         fullWidth
-                        sx={calculatorStyles.addHardwareButton}
+                        sx={{ mt: 2 }}
                       >
                         Добавить фурнитуру
                       </Button>
-                      {additionalHardware.customItems.length > 0 && (
-                        <Box sx={calculatorStyles.addedHardware}>
-                          <Typography variant="subtitle2" sx={calculatorStyles.addedHardwareTitle}>Добавленная фурнитура:</Typography>
+                    </Grid>
+                    {additionalHardware.customItems.length > 0 && (
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 2 }}>
                           {additionalHardware.customItems.map((item) => (
-                            <Box key={item.id} sx={calculatorStyles.addedItem}>
-                              <Typography sx={calculatorStyles.itemName}>{item.name}</Typography>
-                              <Typography variant="body2" color="text.secondary">
+                            <Box
+                              key={item.id}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                mb: 2,
+                                p: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1
+                              }}
+                            >
+                              <Typography sx={{ flex: 1 }}>{item.name}</Typography>
+                              <Typography sx={{ minWidth: '80px' }}>
                                 {item.count} шт.
                               </Typography>
-                              <IconButton 
-                                size="small"
+                              <IconButton
                                 onClick={() => removeCustomHardware(item.id)}
-                                sx={calculatorStyles.deleteIcon}
+                                size="small"
+                                sx={{
+                                  color: 'text.secondary',
+                                  '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    color: 'error.main'
+                                  }
+                                }}
                               >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
                             </Box>
                           ))}
                         </Box>
-                      )}
-                    </Grid>
+                      </Grid>
+                    )}
                   </Grid>
 
                   <Box sx={calculatorStyles.checkboxContainer}>
@@ -2253,6 +2391,7 @@ const Calculator: React.FC = () => {
                       }}
                       fullWidth
                       size="large"
+                      disabled={!hardwareChanged}
                     >
                       Сохранить
                     </Button>
@@ -2487,10 +2626,7 @@ const Calculator: React.FC = () => {
 
       <Dialog
         open={openHardwareDialog}
-        onClose={() => {
-          setOpenHardwareDialog(false);
-          calculatePrice(); // Добавляем расчет при закрытии диалога
-        }}
+        onClose={handleCloseHardware}
         maxWidth="sm"
         fullWidth
       >
@@ -2609,10 +2745,7 @@ const Calculator: React.FC = () => {
           gap: 1
         }}>
           <Button 
-            onClick={() => {
-              setOpenHardwareDialog(false);
-              calculatePrice();
-            }}
+            onClick={handleCloseHardware}
             variant="outlined"
             sx={{ 
               minWidth: '120px',
@@ -2623,18 +2756,10 @@ const Calculator: React.FC = () => {
             Закрыть
           </Button>
           <Button 
-            onClick={() => {
-              if (newHardwareName.trim()) {
-                if (getAvailableHardwareItems().includes(newHardwareName.trim())) {
-                  addCustomHardware();
-                }
-              }
-              setOpenHardwareDialog(false);
-              calculatePrice();
-            }}
+            onClick={handleSaveHardware}
             variant="contained"
             color="primary"
-            disabled={newHardwareName.trim() !== '' && !getAvailableHardwareItems().includes(newHardwareName.trim())}
+            disabled={!hardwareDialogChanged || (newHardwareName.trim() !== '' && !getAvailableHardwareItems().includes(newHardwareName.trim()))}
             sx={{ 
               minWidth: '120px',
               textTransform: 'none',
